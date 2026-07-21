@@ -1,0 +1,85 @@
+{
+  "bypass": false,
+  "hwids": [
+    {
+      "hwid": "37ee29cd486506055b5eb1b5319f237bed25a3b5435e54e6c57c8e612e9ac603",
+      "expires": "2026-8-14",
+      "note": "KawaMochi"
+    },
+    {
+      "hwid": "64fc1999592f196863e6c3407f7844b44e749592bb83384de88635462d277b52",
+      "expires": "never",
+      "note": "me"
+    },
+    {
+      "hwid": "c7133281933c8719b2197a008dae617511187b11f3fe4ef1afcada8f9eb3a5c5",
+      "expires": "2026-08-12",
+      "note": "MyMXX"
+    },
+    {
+      "hwid": "ddb9b6eb5b02f11b53fee45fdc5f499ac86a7e74b78e595442d013901f0c3b46",
+      "expires": "2026-08-12",
+      "note": "mrsubnoser"
+    },
+    {
+      "hwid": "48ebb7c80a071e68d5f330648d372a14d44df03c2a5c9d79e757bb7c47c0bf493897fad4f31b618243646b07bebfbc73d00e79a646671ba9333cd064c936e5d8",
+      "expires": "2026-08-14",
+      "note": "yves"
+    },
+    {
+      "hwid": "410d51f35b1c0008c218b467c89799e5feea5b89bfed5eb7305ab170712a1581",
+      "expires": "2026-08-14",
+      "note": "JayL(deck)"
+    },
+    {
+      "hwid": "a64b04a5c63fb3699228fe4178cea7306afaf200fd3eedfddddf515bb0b39d1134a88fc41b0c9aa8f2bdf536579677a59d696db7f4c2dffdf9c164d90693adc2",
+      "expires": "2026-08-14",
+      "note": "0000guy"
+    },
+    {
+      "hwid": "279108ab005ed9d8c86e8dd9857bae408f0511fb0407d680709f3d756366b0d0",
+      "expires": "2026-08-14",
+      "note": "ath"
+    },
+    {
+      "hwid": "88ef9596-1860-11ef-ada9-806e6f6e6963",
+      "expires": "2026-08-16",
+      "note": "janded"
+    },
+    {
+      "hwid": "e2ef15623f88c186eb106047cce86631fddb24e71f7c14cf1fbb4bc58ad4fd1e",
+      "expires": "2026-08-17",
+      "note": "bibiyahuuzzy"
+    },
+    {
+      "hwid": "b74e5d0e0f053fbb5097a9b9aa45c985cac3a6b5cf49fd6a18481b9617f12572",
+      "expires": "2026-08-17",
+      "note": "janded2"
+    },
+    {
+      "hwid": "8d236c46119fcc16f27aaca1701227a885b5935be3c60e08075193c7af843e5d",
+      "expires": "2026-08-18",
+      "note": "majesticplain"
+    },
+    {
+      "hwid": "80c2f682cfc25da3a481423cd72ad4058084d6d5411d0254a7449b50d2a515fcca7477f0ccd037f4b3a7ad438a705c65e613330125bdca069b8b52bc7c666cbf",
+      "expires": "2026-08-18",
+      "note": "leothorn"
+    },
+    {
+      "hwid": "8aa3d9f20d35447d94413dca596b1cb2f5bae2fcf0ada08d52a61af05a090ee7a49160908144878f3b36833136251bf0c0dd9558bcfb4d69320c90c653e3bb3e",
+      "expires": "2026-08-18",
+      "note": "pubert"
+    },
+    {
+      "hwid": "66ef0d1ab3bf0cf80aaf84fb8d979db99e05c707f929ee683ea3f94d6e87ff27de9b754a95b16d4a7db7fcc0a365bd70",
+      "expires": "2026-08-20",
+      "note": "<@1082314451656638535>"
+    },
+    {
+      "hwid": "965c87ed93f2b76b327993e0de6f5ba770a4b1025daec86d217431c93c3fda63",
+      "expires": "2026-08-20",
+      "note": "<@1369651418528612383>"
+    }
+  ]
+}
