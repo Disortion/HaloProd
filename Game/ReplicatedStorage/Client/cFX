@@ -1,0 +1,84 @@
+-- Script Path: game:GetService("ReplicatedStorage").Client.cFX
+-- Took 0.07s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local t = {}
+
+game:GetService("Debris")
+game:GetService("Players")
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local Components = require(ReplicatedStorage.Components)
+local AudioClient = require(ReplicatedStorage.Shared.AudioClient)
+local CVars = require(ReplicatedStorage.Shared.CVars)
+local Packets = require(ReplicatedStorage.Shared.Packets)
+local cl_vo_music = CVars.cl_vo_music
+local Wire = AudioClient.Wire
+local FADER_GAME_MUSIC = AudioClient.FADER_GAME_MUSIC
+local v1 = nil
+
+function t.init() --[[ init | Line: 19 | Upvalues: ReplicatedStorage (copy), Components (copy), Packets (copy), v1 (ref), TweenService (copy), Wire (copy), FADER_GAME_MUSIC (copy), cl_vo_music (copy) ]]
+    ReplicatedStorage.Remotes.ToClient.DrawBullet.OnClientEvent:Connect(function(p1, p2, p3) --[[ Line: 20 | Upvalues: Components (ref) ]]
+        Components.BulletFactory.VisualFire(p1, p2, p3)
+    end)
+    ReplicatedStorage.Remotes.ToClient.DrawMuzzle.OnClientEvent:Connect(function(p1) --[[ Line: 23 | Upvalues: Components (ref) ]]
+        Components.BulletFactory.MuzzleFlash(p1)
+    end)
+    Packets.ToClient.packets.playMusic.listen(function(p1) --[[ Line: 26 | Upvalues: v1 (ref), TweenService (ref), Wire (ref), FADER_GAME_MUSIC (ref), cl_vo_music (ref) ]]
+        local v12 = p1.audioPlayer:Clone()
+
+        v12.Parent = p1.audioPlayer.Parent
+
+        repeat
+            task.wait()
+        until v12.IsReady
+
+        local v2 = p1.duration or v12.TimeLength
+        local fadeOut = p1.fadeOut
+        local AudioFader = Instance.new("AudioFader", v12)
+
+        if v1 and not p1.dontInterrupt then
+            local v3 = v1
+
+            task.spawn(function() --[[ Line: 39 | Upvalues: TweenService (ref), v1 (ref), v3 (copy) ]]
+                local v12 = TweenService:Create(v1, TweenInfo.new(1), {
+                    Volume = 0
+                })
+
+                v12:Play()
+                v12.Completed:Wait()
+                v3:Destroy()
+            end)
+        end
+
+        Wire(v12, AudioFader)
+        Wire(AudioFader, FADER_GAME_MUSIC)
+
+        if not p1.dontInterrupt then
+            v1 = v12
+        end
+
+        task.delay(v2, function() --[[ Line: 52 | Upvalues: v12 (copy) ]]
+            if v12.Parent == nil then
+                return
+            end
+
+            v12:Destroy()
+        end)
+
+        if fadeOut then
+            task.delay(v2 - fadeOut, function() --[[ Line: 58 | Upvalues: TweenService (ref), AudioFader (copy), fadeOut (copy) ]]
+                TweenService:Create(AudioFader, TweenInfo.new(fadeOut), {
+                    Volume = 0
+                }):Play()
+            end)
+        end
+
+        FADER_GAME_MUSIC.Volume = cl_vo_music:get()
+        v12:Play()
+    end)
+end
+
+return t
