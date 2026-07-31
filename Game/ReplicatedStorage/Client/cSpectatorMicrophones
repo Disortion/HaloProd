@@ -1,0 +1,124 @@
+-- Script Path: game:GetService("ReplicatedStorage").Client.cSpectatorMicrophones
+-- Took 0.09s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+require(ReplicatedStorage.Components.Player)
+
+local AudioClient = require(ReplicatedStorage.Shared.AudioClient)
+local CVars = require(ReplicatedStorage.Shared.CVars)
+local World = require(ReplicatedStorage.World)
+local t = {}
+local t2 = {}
+local v1 = true
+local log_spectatorwires = CVars.log_spectatorwires
+
+local function CreateLogger() --[[ CreateLogger | Line: 15 | Upvalues: log_spectatorwires (copy) ]]
+    if log_spectatorwires:equals(0) then
+        return function() --[[ Line: 16 ]] end
+    end
+
+    return print
+end
+
+local v2 = if log_spectatorwires:equals(0) then function() --[[ Line: 16 ]] end else print
+
+local function Connect(p1) --[[ Connect | Line: 21 | Upvalues: v2 (copy), AudioClient (copy) ]]
+    local AudioDeviceInput = p1:WaitForChild("AudioDeviceInput", 2)
+
+    if AudioDeviceInput then
+        v2("Adding wire from " .. p1.Name)
+
+        return AudioClient.Wire(AudioDeviceInput, AudioClient.FADER_GAME)
+    end
+end
+
+local function OnEntityChanged(p1, p2) --[[ OnEntityChanged | Line: 30 | Upvalues: World (copy), t2 (copy), v2 (copy), v1 (ref), AudioClient (copy) ]]
+    local v12 = World.get(p1)
+
+    if not v12.Player then
+        return
+    end
+
+    repeat
+        task.wait()
+    until World.get(World.LocalEntityId)
+
+    local CharacterControlling = v12.Player.CharacterControlling
+    local CharacterControlling2 = World.get(World.LocalEntityId).Player.CharacterControlling
+    local v22 = t2[v12.Player.Instance]
+
+    v2(p1)
+
+    if p1 == World.LocalEntityId and (not CharacterControlling and v1 == true) then
+        v2("You\'re dead lol. Connecting you to other dead guys")
+        v1 = false
+
+        for v4, v5 in World.GetEntitiesWithComponent("Player") do
+            local v3
+
+            if v4 ~= World.LocalEntityId and not (v5.Player.CharacterControlling or t2[v5.Player.Instance]) then
+                local v8 = v5.Player.Instance
+                local AudioDeviceInput = v8:WaitForChild("AudioDeviceInput", 2)
+
+                if AudioDeviceInput then
+                    v2("Adding wire from " .. v8.Name)
+                    v3 = AudioClient.Wire(AudioDeviceInput, AudioClient.FADER_GAME)
+                else
+                    v3 = nil
+                end
+
+                t2[v5.Player.Instance] = v3
+            end
+        end
+    elseif p1 == World.LocalEntityId or (CharacterControlling2 or (CharacterControlling or v22)) then
+        if p1 ~= World.LocalEntityId and (CharacterControlling and v22) then
+            v2((("%* has spawned, removing their spectator wire"):format(v12.Player.Instance.Name)))
+            t2[v12.Player.Instance] = nil
+            v22:Destroy()
+
+            return
+        end
+
+        if not CharacterControlling2 then
+            return
+        end
+
+        v2("You just spawned, cleaning your spectator wires")
+
+        for v10, v11 in t2 do
+            t2[v10] = nil
+            v11:Destroy()
+            v1 = true
+        end
+    else
+        local v122 = v12.Player.Instance
+
+        v2((("%* has died, adding their spectator wire"):format(v12.Player.Instance.Name)))
+
+        local AudioDeviceInput = v122:WaitForChild("AudioDeviceInput", 2)
+        local v14
+
+        if AudioDeviceInput then
+            v2("Adding wire from " .. v122.Name)
+            v14 = AudioClient.Wire(AudioDeviceInput, AudioClient.FADER_GAME)
+        else
+            v14 = nil
+        end
+
+        t2[v122] = v14
+    end
+end
+
+function t.init() --[[ init | Line: 69 | Upvalues: World (copy), OnEntityChanged (copy) ]]
+    World.ObjectCreated:Connect(OnEntityChanged)
+    World.ObjectModified:Connect(OnEntityChanged)
+
+    for v1, v2 in World.GetEntitiesWithComponent("Player") do
+        OnEntityChanged(v1)
+    end
+end
+
+return t
