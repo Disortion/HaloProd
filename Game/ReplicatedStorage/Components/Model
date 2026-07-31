@@ -1,0 +1,253 @@
+-- Script Path: game:GetService("ReplicatedStorage").Components.Model
+-- Took 0.09s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local t = {}
+local t2 = {}
+local World = require(game.ReplicatedStorage.World)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local t3 = {
+    OutOfAmmo = ReplicatedStorage.Assets.sfx.shoot_noammo,
+    Throw = ReplicatedStorage.Assets.sfx.throw,
+    PullPin = ReplicatedStorage.Assets.sfx.PullPin,
+    Eat = ReplicatedStorage.Assets.sfx.Chomp
+}
+local t4 = {}
+
+function t.__call(p1, p2, p3, p4) --[[ __call | Line: 24 | Upvalues: t3 (copy) ]]
+    local v2 = if p3 then p3 else {}
+
+    for v3, v4 in t3 do
+        if not v2[v3] then
+            v2[v3] = v4
+        end
+    end
+
+    local t = {
+        ActiveSounds = 0,
+        Instance = p2,
+        Sounds = v2
+    }
+
+    t.Persist = if p4 == nil or not p4 then false else p4
+
+    return t
+end
+function LinkEmitterToPlayer(p1, p2) --[[ LinkEmitterToPlayer | Line: 41 ]]
+    local Wire = Instance.new("Wire")
+
+    Wire.Parent = p2
+    Wire.SourceInstance = p2
+    Wire.TargetInstance = p1
+end
+function t2.PlaySound(p1, p2, p3) --[[ PlaySound | Line: 49 | Upvalues: World (copy), ReplicatedStorage (copy) ]]
+    local v1 = World.get(p1)
+
+    if not (v1 and v1.Model) then
+        warn("Entity or Model is missing!")
+
+        return
+    end
+
+    v1.Model.ActiveSounds = v1.Model.ActiveSounds or 0
+
+    if not (v1.Model.ActiveSounds < 30) then
+        return
+    end
+
+    local v2 = math.clamp(v1.Model.ActiveSounds, 0, 30)
+    local v4 = (v1.Model.Sounds and v1.Model.Sounds[p2] or ReplicatedStorage.Assets.sfx.Sound_Missing):Clone()
+
+    v4.Parent = v1.Model.Instance
+
+    local AudioEmitter = v1.Model.Instance:FindFirstChild("AudioEmitter")
+
+    if AudioEmitter then
+        LinkEmitterToPlayer(AudioEmitter, v4)
+    end
+
+    v4.PlaybackSpeed = p3 or v4.PlaybackSpeed
+    v4:Play()
+    World.patch(p1, {
+        Model = {
+            ActiveSounds = v2 + 1
+        }
+    })
+
+    local v6 = v4.TimeLength + 1
+
+    task.spawn(function() --[[ Line: 86 | Upvalues: v6 (copy), v4 (copy), World (ref), p1 (copy) ]]
+        task.wait(v6)
+        game:GetService("Debris"):AddItem(v4, v6)
+
+        local v1 = World.get(p1)
+
+        if not (v1 and v1.Model) then
+            return
+        end
+
+        local t = {}
+        local t2 = {}
+
+        t2.ActiveSounds = math.max(0, v1.Model.ActiveSounds - 1)
+        t.Model = t2
+        World.patch(p1, t)
+    end)
+end
+function t2.IsOverlappingPart(p1) --[[ IsOverlappingPart | Line: 104 | Upvalues: World (copy) ]]
+    local v1 = World.get(p1)
+
+    if not (v1 and (v1.Model and v1.Model.Instance)) then
+        return false
+    end
+
+    local v2, v3 = v1.Model.Instance:GetBoundingBox()
+
+    for v4, v5 in workspace:GetPartBoundsInBox(v2, v3 * 0.5) do
+        if v5.Anchored and v5.CanCollide then
+            return true
+        end
+    end
+
+    return false
+end
+function t2.WrapModel(p1) --[[ WrapModel | Line: 123 ]]
+    local Model = Instance.new("Model")
+    local v1 = p1.Parent
+
+    p1.Parent = Model
+    Model.Name = p1.Name
+    Model.PrimaryPart = p1
+    Model.Parent = v1
+    p1.Name = "Root"
+
+    return Model
+end
+function t2.ModelToId(p1) --[[ ModelToId | Line: 134 | Upvalues: t4 (copy) ]]
+    return t4[p1]
+end
+function t2.ToggleSound(p1, p2, p3, p4) --[[ ToggleSound | Line: 138 | Upvalues: World (copy) ]]
+    local v1 = World.get(p1)
+
+    if not v1.Model then
+        return
+    end
+
+    local v2 = v1.Model.Instance:FindFirstChild(p2)
+
+    if v2 or not p4 then
+        if not v2 then
+            return
+        end
+
+        if p4 then
+            v2.PlaybackSpeed = p3
+            v2:Play()
+
+            return
+        end
+
+        v2:Destroy()
+    else
+        local v4 = (if v1.Model.Sounds and v1.Model.Sounds[p2] then v1.Model.Sounds[p2] else game.ReplicatedStorage.Assets.sfx.Sound_Missing):Clone()
+
+        v4.Name = p2
+        v4.Parent = v1.Model.Instance
+        v4.PlaybackSpeed = p3
+        v4.Looping = true
+        LinkEmitterToPlayer(v1.Model.Instance:FindFirstChild("AudioEmitter"), v4)
+        v4:Play()
+    end
+end
+function t2.ToggleVisible(p1, p2) --[[ ToggleVisible | Line: 168 | Upvalues: World (copy) ]]
+    local v1 = World.get(p1)
+
+    if not v1.Model then
+        return
+    end
+
+    for i, v in ipairs(v1.Model.Instance:GetDescendants()) do
+        if v:IsA("BasePart") then
+            if not v:GetAttribute("OriginalTransparency") then
+                v:SetAttribute("OriginalTransparency", v.Transparency)
+            end
+
+            v.Transparency = p2 and v:GetAttribute("OriginalTransparency") or 1
+
+            continue
+        end
+
+        if v:IsA("Decal") then
+            if not v:GetAttribute("OriginalTransparency") then
+                v:SetAttribute("OriginalTransparency", v.Transparency)
+            end
+
+            v.Transparency = p2 and v:GetAttribute("OriginalTransparency") or 1
+
+            continue
+        end
+
+        if v:IsA("SurfaceGui") then
+            for i2, v2 in ipairs(v:GetDescendants()) do
+                if v2:IsA("GuiObject") then
+                    if not v2:GetAttribute("OriginalTransparency") then
+                        v2:SetAttribute("OriginalTransparency", v2.BackgroundTransparency)
+                    end
+
+                    v2.BackgroundTransparency = p2 and v2:GetAttribute("OriginalTransparency") or 1
+                end
+            end
+        end
+    end
+end
+function t2.Destroy(p1, p2) --[[ Destroy | Line: 199 | Upvalues: t4 (copy) ]]
+    if not p2.Model.Instance then
+        return
+    end
+
+    t4[p2.Model.Instance] = nil
+    p2.Model.Instance:Destroy()
+end
+function t2.Spawn(p1) --[[ Spawn | Line: 206 | Upvalues: World (copy), t2 (copy), t4 (copy) ]]
+    local v1 = World.get(p1).Model.Instance:Clone()
+    local AudioEmitter = Instance.new("AudioEmitter")
+
+    if v1 and v1:IsA("BasePart") then
+        v1 = t2.WrapModel(v1)
+    end
+
+    if not v1.PrimaryPart and v1:FindFirstChild("Root") then
+        v1.PrimaryPart = v1:FindFirstChild("Root")
+    end
+
+    v1.ModelStreamingMode = Enum.ModelStreamingMode.Persistent
+    v1.Parent = workspace
+
+    if v1.PrimaryPart then
+        for v3, v4 in v1:GetDescendants() do
+            if v4:IsA("BasePart") then
+                if v4 ~= v1.PrimaryPart then
+                    local WeldConstraint = Instance.new("WeldConstraint")
+
+                    WeldConstraint.Parent = v1.PrimaryPart
+                    WeldConstraint.Part0 = v4
+                    WeldConstraint.Part1 = v1.PrimaryPart
+                    WeldConstraint.Enabled = true
+                end
+
+                v4.Anchored = false
+            end
+        end
+    end
+
+    t4[v1] = p1
+    AudioEmitter.Parent = v1
+    World.patch(p1, {
+        Model = {
+            Instance = v1
+        }
+    })
+end
+
+return setmetatable(t2, t)
