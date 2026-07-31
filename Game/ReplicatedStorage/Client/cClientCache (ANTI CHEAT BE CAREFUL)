@@ -1,0 +1,120 @@
+-- Script Path: game:GetService("ReplicatedStorage").Client.cClientCache
+-- Took 0.07s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local t = {}
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local MarketplaceService = game:GetService("MarketplaceService")
+local PromptPurchase = MarketplaceService.PromptPurchase
+local RunService = game:GetService("RunService")
+
+game:GetService("TweenService")
+
+local Packets = require(ReplicatedStorage.Shared.Packets)
+local v1 = math.random(5000, 10000)
+
+local function jjsploit_detected() --[[ jjsploit_detected | Line: 14 | Upvalues: RunService (copy), v1 (ref) ]]
+    warn("WAS GOING TO CRASH" .. debug.traceback())
+
+    local v12 = os.clock()
+
+    RunService.RenderStepped:Connect(function() --[[ Line: 18 | Upvalues: v12 (ref), v1 (ref) ]]
+        repeat
+
+        until not (os.clock() - v12 < 1 / v1)
+
+        v12 = os.clock()
+        v1 = v1 - 1
+
+        if not (v1 < 5) then
+            return
+        end
+
+        task.wait(5)
+
+        while true do
+
+        end
+    end)
+end
+
+local function use_a_coregui_instead_dude(p1) --[[ use_a_coregui_instead_dude | Line: 29 | Upvalues: jjsploit_detected (copy) ]]
+    local v1 = p1:IsA("Highlight") and (if p1.Name == "ItemHoverHighlight" then false else true)
+
+    if not (v1 or p1:IsA("BillboardGui") and (not p1:FindFirstAncestor("CurrentMap") and (if p1.Name == "NamePlate" then false else true))) then
+        return
+    end
+
+    p1:Destroy()
+    jjsploit_detected()
+end
+
+local function walkspeed() --[[ walkspeed | Line: 39 | Upvalues: Players (copy), jjsploit_detected (copy) ]]
+    while task.wait(1) do
+        pcall(function() --[[ Line: 41 | Upvalues: Players (ref), jjsploit_detected (ref) ]]
+            local Character = Players.LocalPlayer.Character
+
+            if not (Character and Character:FindFirstChild("Humanoid")) then
+                return
+            end
+
+            local v1 = Character.Humanoid:GetState()
+            local v2 = Character:FindFirstChildOfClass("BodyGyro") or Character:FindFirstChildOfClass("BodyAngularVelocity") or Character:FindFirstChildOfClass("BodyThrust")
+
+            if rawget(Character.Humanoid, "WalkSpeed") > 12 or (v1 == Enum.HumanoidStateType.Swimming or v1 == Enum.HumanoidStateType.Jumping) then
+                jjsploit_detected()
+            end
+
+            if not v2 then
+                return
+            end
+
+            v2:Destroy()
+            jjsploit_detected()
+        end)
+    end
+end
+
+local function marketplacecheck() --[[ marketplacecheck | Line: 64 | Upvalues: PromptPurchase (copy), MarketplaceService (copy) ]]
+    local function boom() --[[ boom | Line: 66 ]]
+        while true do
+
+        end
+    end
+
+    repeat
+        if not task.wait(1) then
+            return
+        end
+
+        local ok, result = pcall(PromptPurchase, MarketplaceService)
+
+        if ok or type(result) ~= "string" then
+            while true do
+
+            end
+        end
+    until not (result:match("Argument") and result:match("missing or nil"))
+
+    while true do
+
+    end
+end
+
+function t.init() --[[ init | Line: 89 | Upvalues: Packets (copy), jjsploit_detected (copy), walkspeed (copy), marketplacecheck (copy) ]]
+    task.spawn(function() --[[ Line: 90 | Upvalues: Packets (ref), jjsploit_detected (ref), walkspeed (ref), marketplacecheck (ref) ]]
+        Packets.ToClient.packets.clientCache.listen(jjsploit_detected)
+        task.spawn(walkspeed)
+        task.spawn(marketplacecheck)
+
+        if workspace.Gravity == 80 then
+            return
+        end
+
+        jjsploit_detected()
+    end)
+end
+
+return t
