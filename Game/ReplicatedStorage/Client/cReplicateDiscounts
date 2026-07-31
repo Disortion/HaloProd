@@ -1,0 +1,32 @@
+-- Script Path: game:GetService("ReplicatedStorage").Client.cReplicateDiscounts
+-- Took 0.08s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+require(ReplicatedStorage.Components.MarketItem)
+
+local EntityBlueprints = require(ReplicatedStorage.Shared.EntityBlueprints)
+local Packets = require(ReplicatedStorage.Shared.Packets)
+
+return {
+    init = function() --[[ init | Line: 7 | Upvalues: Packets (copy), EntityBlueprints (copy) ]]
+        Packets.ToClient.packets.replicateDiscount.listen(function(p1) --[[ Line: 8 | Upvalues: EntityBlueprints (ref) ]]
+            local v1 = string.split(p1.path, "/")
+            local v2 = EntityBlueprints[v1[1]] and EntityBlueprints[v1[1]][v1[2]]
+
+            if not v2 then
+                warn("Blueprint " .. p1.path .. " not found when applying discount.")
+
+                return
+            end
+
+            if p1.newDiscount then
+                v2.MarketItem.DiscountMultiplier = math.floor(p1.newDiscount * 100) / 100
+            else
+                v2.MarketItem.DiscountMultiplier = nil
+            end
+        end)
+    end
+}
