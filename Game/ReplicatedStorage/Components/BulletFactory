@@ -1,0 +1,299 @@
+-- Script Path: game:GetService("ReplicatedStorage").Components.BulletFactory
+-- Took 0.15s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local t = {}
+local t2 = {}
+local World = require(game.ReplicatedStorage.World)
+local PhysicsService = game:GetService("PhysicsService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local CVars = require(ReplicatedStorage.Shared.CVars)
+local PartCache = require(game.ReplicatedStorage.Shared.PartCache)
+local Bullet2 = ReplicatedStorage.Assets.Bullet2
+local MuzzleFlash = ReplicatedStorage.Assets.MuzzleFlash
+local Raycast2 = require(ReplicatedStorage.Shared.Raycast2)
+local t3 = {
+    [0] = 1,
+    [250] = 0.5,
+    [500] = 0
+}
+local v1 = nil
+local v2 = nil
+local v3 = nil
+
+local function interpolateValue(p1, p2) --[[ interpolateValue | Line: 59 ]]
+    local t = {}
+
+    for k in pairs(p1) do
+        table.insert(t, k)
+    end
+
+    table.sort(t)
+
+    if p2 <= t[1] then
+        return p1[t[1]]
+    end
+
+    if t[#t] <= p2 then
+        return p1[t[#t]]
+    end
+
+    for i = 2, #t do
+        if p2 < t[i] then
+            local v1 = t[i - 1]
+            local v2 = t[i]
+
+            return p1[v1] + (p1[v2] - p1[v1]) * ((p2 - v1) / (v2 - v1))
+        end
+    end
+
+    return -1
+end
+
+function t.__call(p1, p2) --[[ __call | Line: 81 | Upvalues: t3 (copy) ]]
+    local v1 = if p2 then p2 else {}
+    local t = {
+        Velocity = v1.Velocity or 500,
+        Damage = v1.Damage or 1
+    }
+
+    t.RotRecoil = v1.RotRecoil or Vector2.zero
+    t.PosRecoil = v1.PosRecoil or Vector3.new(0, 0, 0)
+    t.RecoilVariance = v1.RecoilVariance or 0.5
+    t.Acceleration = v1.Acceleration or Vector3.new(0, 0, 0)
+    t.HideMuzzle = v1.HideMuzzle or false
+    t.PelletCount = v1.PelletCount or 1
+    t.Spread = v1.Spread or 0
+
+    local v3, v4
+
+    if v1.EmitCasings == nil then
+        v3 = v1
+        v4 = true
+    else
+        v4 = v1.EmitCasings
+        v3 = v1
+
+        if not v4 then
+            v4 = true
+        end
+    end
+
+    t.EmitCasings = v4
+    t.DropoffSequence = v3.DropoffSequence or t3
+    t.HideBullet = v3.HideBullet
+    t.Lifetime = v3.Lifetime
+    t.CustomBulletType = v3.CustomBulletType
+    t.HitCharacterNoise = v3.HitCharacterNoise
+    t.HitPartNoise = v3.HitPartNoise
+
+    return t
+end
+function t2.CalculateFalloffModifier(p1, p2) --[[ CalculateFalloffModifier | Line: 104 | Upvalues: World (copy), t3 (copy), interpolateValue (copy) ]]
+    local v1 = World.get(p1)
+
+    return interpolateValue(v1 and v1.BulletFactory and v1.BulletFactory.DropoffSequence or t3, p2)
+end
+function t2.CanBulletPassThrough(p1) --[[ CanBulletPassThrough | Line: 116 | Upvalues: PhysicsService (copy) ]]
+    local v1 = p1:FindFirstAncestorOfClass("Model")
+    local v2 = PhysicsService:CollisionGroupsAreCollidable(p1.CollisionGroup, "Characters")
+    local v4 = not (if v2 then p1.CanCollide else v2)
+    local v5 = if v1 then v1:FindFirstChildOfClass("Humanoid") else v1
+    local v6 = if p1.Transparency == 1 then true else false
+
+    return if p1.Name == "HumanoidRootPart" then true else p1:FindFirstAncestorOfClass("Accessory") or (if v6 or v4 then not v5 else v4)
+end
+function t2.CalcArc(p1, p2, p3, p4) --[[ CalcArc | Line: 127 | Upvalues: World (copy) ]]
+    local v1 = World.get(p1)
+    local v2 = if v1 then v1.BulletFactory else v1
+
+    if v2 then
+        return p2 + p3.Unit * v2.Velocity * p4 + 0.5 * (v2.Acceleration + Vector3.new(0, -workspace.Gravity, 0) - Vector3.new(0, 0, 4)) * p4 * p4
+    end
+
+    return Vector3.new(0, 0, 0)
+end
+function t2.VisualFire(p1, p2, p3) --[[ VisualFire | Line: 141 | Upvalues: World (copy), v1 (ref), PartCache (copy), Bullet2 (copy), RunService (copy), t2 (copy), Raycast2 (copy) ]]
+    debug.profilebegin("BulletVisuals")
+
+    local v12 = World.get(p1)
+    local v2 = if v12 then v12.BulletFactory else v12
+
+    if not v2 then
+        return
+    end
+
+    local v3 = workspace:Raycast(p2, p3 * 999)
+    local v4 = workspace:Raycast(p2, p3 * 999) and v3.Position or p2 + p3 * 999
+
+    if not v1 then
+        v1 = PartCache.new(Bullet2, 200, workspace.Terrain)
+    end
+
+    local v5 = nil
+    local v6 = 0
+
+    if v2.HideBullet then
+        debug.profileend()
+
+        return
+    end
+
+    local v7 = v1:GetPart()
+
+    v7.Size = Bullet2.Size
+    v7.CFrame = CFrame.new(p2, v4)
+
+    local v8 = false
+    local v9 = v2.Lifetime or 3
+    local _ = RunService.Stepped:Connect(function(p12, p22) --[[ Line: 158 | Upvalues: t2 (ref), p1 (copy), p2 (copy), p3 (copy), v6 (ref), Raycast2 (ref), v8 (ref), v7 (copy), v9 (copy), v1 (ref), v5 (ref) ]]
+        local Position = CFrame.new(t2.CalcArc(p1, p2, p3, v6)).Position
+        local Position2 = CFrame.new(t2.CalcArc(p1, p2, p3, v6 + p22)).Position
+
+        v6 = v6 + p22
+
+        local v12 = Raycast2.Raycast(Position, Position2 - Position, nil, t2.CanBulletPassThrough)
+
+        if v12 then
+            Position2 = v12.Position
+            v8 = true
+        end
+
+        v7.Size = Vector3.new(0.1, 0.1, (Position - Position2).Magnitude)
+        workspace:BulkMoveTo({ v7 }, { CFrame.new(Position, Position2) * CFrame.new(0, 0, -(Position - Position2).Magnitude / 2) }, Enum.BulkMoveMode.FireCFrameChanged)
+
+        if v8 or v9 < v6 then
+            v1:ReturnPart(v7)
+            v5:Disconnect()
+        end
+    end)
+
+    debug.profileend()
+end
+function t2.MuzzleFlash(p1) --[[ MuzzleFlash | Line: 179 | Upvalues: World (copy), v2 (ref), PartCache (copy), MuzzleFlash (copy), t2 (copy), ReplicatedStorage (copy) ]]
+    local v1 = World.get(p1)
+    local v22 = if v1 then v1.BulletFactory else v1
+    local v3 = if v1 then v1.Model.Instance else v1
+
+    if not v2 then
+        v2 = PartCache.new(MuzzleFlash, 14, workspace.Terrain)
+    end
+
+    if not v22 then
+        return
+    end
+
+    if not v22.HideMuzzle then
+        local v4 = if v3 then v3.Root.Muzzle else v3
+        local v5 = v2:GetPart()
+        local v8 = v4.WorldCFrame * CFrame.new((Vector3.new(0, 0, -v5.Size.Z / 2)))
+
+        v5.CFrame = v8 * CFrame.Angles(0, 0, (math.deg((math.random(0, 360)))))
+        v5.Size = MuzzleFlash.Size * math.random(90, 100) / 100
+        task.spawn(function() --[[ Line: 190 | Upvalues: v2 (ref), v5 (copy) ]]
+            task.wait(math.random(5, 10) / 100)
+            v2:ReturnPart(v5)
+        end)
+    end
+
+    if v22.EmitCasings then
+        t2.EjectCasing(p1)
+    end
+
+    require(ReplicatedStorage.Components).Model.PlaySound(p1, "Fire")
+end
+function t2.EjectCasing(p1) --[[ EjectCasing | Line: 199 | Upvalues: World (copy), v3 (ref), PartCache (copy), ReplicatedStorage (copy) ]]
+    local v1 = World.get(p1)
+    local v2 = if v1 then v1.BulletFactory else v1
+    local v32 = if v1 then v1.Model.Instance else v1
+
+    if not v2 then
+        error("No bulletfactory")
+    end
+
+    if not v32 then
+        warn("No model to eject casings from")
+    end
+
+    if not v3 then
+        v3 = PartCache.new(ReplicatedStorage.Assets.Casing, 300, workspace)
+    end
+
+    local PrimaryPart = v32.PrimaryPart
+    local RightVector = PrimaryPart.CFrame.RightVector
+
+    if PrimaryPart:FindFirstChild("Pivot") then
+        RightVector = PrimaryPart.Pivot.WorldCFrame.RightVector
+    end
+
+    local v4 = v3:GetPart()
+
+    v4.Anchored = false
+    v4.CFrame = PrimaryPart.CFrame * CFrame.new(0, 0.5, -1)
+    v4.AssemblyLinearVelocity = RightVector * 10
+    v4.AssemblyAngularVelocity = Vector3.new(-10, 40, 30)
+    v4.CollisionGroup = "Debris"
+    v4.Touched:Once(function() --[[ Line: 217 | Upvalues: ReplicatedStorage (ref), v4 (copy) ]]
+        require(ReplicatedStorage.Shared.SoundBox).PlaySoundAtLocation(ReplicatedStorage.Assets.sfx.Casing, v4.Position)
+        task.wait(2)
+        v4.Anchored = true
+    end)
+    task.spawn(function() --[[ Line: 222 | Upvalues: v3 (ref), v4 (copy) ]]
+        task.wait((math.max(3, 30 - #v3.InUse / 10)))
+        v3:ReturnPart(v4)
+    end)
+end
+function t2.RaycastFire(p1, p2, p3) --[[ RaycastFire | Line: 231 | Upvalues: World (copy), ReplicatedStorage (copy), t2 (copy), CVars (copy) ]]
+    local v1 = World.get(p1)
+
+    if not v1.BulletFactory then
+        warn("No BulletFactory Found")
+
+        return
+    end
+
+    local v2 = 0
+    local v3 = nil
+    local v4 = nil
+    local Gizmo = require(ReplicatedStorage.Shared.Gizmo)
+    local Raycast2 = require(ReplicatedStorage.Shared.Raycast2)
+
+    Gizmo.Init()
+
+    local v5 = t2.CalcArc(p1, p2, p3, v2)
+    local v6 = v1.BulletFactory.Lifetime or 3
+    local v8 = game:GetService("RunService").Stepped:Connect(function(p12, p22) --[[ Line: 246 | Upvalues: v5 (ref), t2 (ref), p1 (copy), p2 (copy), p3 (copy), v2 (ref), Raycast2 (copy), CVars (ref), v3 (ref) ]]
+        v5 = t2.CalcArc(p1, p2, p3, v2)
+
+        local v1 = t2.CalcArc(p1, p2, p3, v2 + p22)
+
+        v2 = v2 + p22
+
+        local v22 = Raycast2.Raycast(v5, v1 - v5, nil, t2.CanBulletPassThrough, CVars.cl_draw_bullets:equals(1))
+
+        if not v22 then
+            return
+        end
+
+        v3 = v22
+    end)
+
+    repeat
+        task.wait()
+    until v3 or v6 < v2
+
+    v8:Disconnect()
+
+    if v3 then
+        v4 = {
+            Origin = v5,
+            Result = v3
+        }
+    end
+
+    return v4
+end
+
+return setmetatable(t2, t)
