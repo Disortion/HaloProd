@@ -1,0 +1,918 @@
+-- Script Path: game:GetService("ReplicatedStorage").Components.CharacterPhysicsHands
+-- Took 0.22s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local t = {}
+local t2 = {}
+local World = require(game.ReplicatedStorage.World)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CVars = require(ReplicatedStorage.Shared.CVars)
+local Raycast2 = require(ReplicatedStorage.Shared.Raycast2)
+local Shared = ReplicatedStorage.Shared
+local Gizmo = require(Shared.Gizmo)
+local InverseKinematics = require(Shared.InverseKinematics)
+local cl_draw_character_m6d = CVars.cl_draw_character_m6d
+local cl_draw_character_velocity = CVars.cl_draw_character_velocity
+local cl_draw_character_hands = CVars.cl_draw_character_hands
+local cl_draw_character_ik = CVars.cl_draw_character_ik
+local sin = math.sin
+local t3 = {
+    leftHip = CFrame.new(-0.5, -0.948, 0),
+    leftFoot = CFrame.new(-0.5, -3, 0),
+    rightHip = CFrame.new(0.5, -0.948, 0),
+    rightFoot = CFrame.new(0.5, -3, 0)
+}
+local t4 = {
+    ikEnabled = true,
+    maxIkVelocity = 200,
+    activationVelocity = 0.1,
+    maxRootAngle = 25,
+    maxAngle = 60,
+    ikExclude = {}
+}
+
+local function lerp(p1, p2, p3) --[[ lerp | Line: 138 ]]
+    return p1 + (p2 - p1) * p3
+end
+
+local function nilContentsExist(p1) --[[ nilContentsExist | Line: 142 ]]
+    for k, v in pairs(p1) do
+        if v == nil then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function FootstepIgnoreFunction(p1) --[[ FootstepIgnoreFunction | Line: 152 ]]
+    return not p1.CanCollide
+end
+
+function t.__call(p1, p2, p3) --[[ __call | Line: 156 | Upvalues: t3 (copy) ]]
+    local RootJoint = p2.Humanoid.RootPart:WaitForChild("RootJoint")
+    local v1 = p2:FindFirstChild("Left Hip", true)
+    local v2 = p2:FindFirstChild("Right Hip", true)
+    local t = {
+        FirstName = "Mike",
+        LastName = "Schmidt",
+        MoveVelocity = Vector3.new(0, 0, 0),
+        TargetMoveVelocity = Vector3.new(0, 0, 0),
+        MovementRatio = 1,
+        CrouchRatio = 0,
+        Lean = 0,
+        TorsoYTilt = -0,
+        MaxInventory = 5,
+        HoldingSlowdown = 0,
+        StepTick = 0,
+        ThrowFloat = -1,
+        LastStableTick = 0,
+        Transform = nil,
+        Model = p2,
+        Instance = p2,
+        LookVector2 = Vector2.new(0, 0),
+        Hands = {
+            RightHandHolding = nil,
+            LeftHandHolding = nil,
+            ReloadTarget = nil
+        },
+        States = {
+            Seated = false
+        },
+        Inventory = {},
+        FeetMaterial = {
+            Left = nil,
+            Right = nil
+        },
+        ikParts = {},
+        baseM6D = {
+            rootJoint = RootJoint.C0,
+            rootC1 = RootJoint.C1,
+            Hips = {
+                LeftHip = v1.C0,
+                RightHip = v2.C0
+            },
+            Arms = {
+                LeftShoulder = p2:FindFirstChild("LeftShoulder", true).C0,
+                RightShoulder = p2:FindFirstChild("RightShoulder", true).C0
+            }
+        },
+        LastUpdate = tick(),
+        Team = p3
+    }
+
+    for k, v in pairs(t3) do
+        local Attachment = Instance.new("Attachment")
+
+        Attachment.Name = k
+        Attachment.CFrame = v
+        Attachment.Parent = p2.Humanoid.RootPart
+        t.ikParts[Attachment.Name] = Attachment
+    end
+
+    task.wait()
+
+    return t
+end
+
+local function CalcArmGrab(p1, p2, p3) --[[ CalcArmGrab | Line: 220 | Upvalues: cl_draw_character_hands (copy), Gizmo (copy) ]]
+    assert(p2.Part0, "No Part0 Found")
+
+    local v4 = p2.Part0.CFrame:ToWorldSpace(CFrame.new(p1.Position + Vector3.new(p1.Position.X * 0.5, 0, 0)) + Vector3.new(0, 0, 1))
+    local v5 = CFrame.new(p3, v4.Position) * CFrame.Angles(1.5707963267948966, 0, math.pi)
+    local v6 = p2.Part0.CFrame:ToObjectSpace(v5) * CFrame.new(Vector3.new(0, 1.2, 0))
+
+    if not cl_draw_character_hands:equals(1) then
+        return v6
+    end
+
+    Gizmo.SetStyle(Color3.fromRGB(255, 137, 137))
+    Gizmo.Box:Draw(v4, Vector3.new(0.1, 0.1, 0.1), false)
+    Gizmo.Ray:Draw(v4.Position, v5.Position)
+
+    return v6
+end
+
+function t2.CalcArmGrab(p1, p2, p3) --[[ CalcArmGrab | Line: 234 | Upvalues: World (copy), CalcArmGrab (copy) ]]
+    local Character = World.get(p1).Character
+    local Model = Character.Model
+    local v1 = if p2:FindFirstAncestorOfClass("Model") == Model then true else false
+
+    assert(p2.Part0, "No Part0 Found")
+
+    local v2
+
+    if Character and (Model and v1) then
+        local Arms = Character.baseM6D.Arms
+
+        if not Arms[p2.Name] then
+            Arms[p2.Name] = p2.C0
+        end
+
+        v2 = CalcArmGrab(Arms[p2.Name], p2, p3.Position)
+    else
+        v2 = nil
+    end
+
+    return v2
+end
+function t2.SetLookVector2(p1, p2) --[[ SetLookVector2 | Line: 249 | Upvalues: World (copy) ]]
+    local v2 = Vector2.new(p2.X, (math.clamp(p2.Y, -0.8726646259971648, 0.8726646259971648)))
+
+    World.patch(p1, {
+        Character = {
+            LookVector2 = v2,
+            RawCharacterTransform = {
+                LookVector2 = v2
+            }
+        }
+    })
+end
+function t2.IncrementLookVector(p1, p2) --[[ IncrementLookVector | Line: 259 | Upvalues: World (copy), t2 (copy) ]]
+    local Character = World.get(p1).Character
+
+    t2.SetLookVector2(p1, Character.LookVector2 - p2)
+end
+function t2.RecoilHand(p1, p2, p3, p4) --[[ RecoilHand | Line: 264 | Upvalues: World (copy) ]]
+    local v1 = World.get(p1) and World.get(p1).Character
+
+    if not v1 then
+        return
+    end
+
+    local v3 = World.get(p4 and v1.Hands.LeftHandHolding or v1.Hands.RightHandHolding)
+
+    if not v3 then
+        return
+    end
+
+    local PrimaryPart = v3.Model.Instance.PrimaryPart
+    local Model = v1.Model
+
+    if not (if Model then Model:FindFirstChild("Head") else Model) then
+        warn("No character found while applying recoil")
+
+        return
+    end
+
+    local v5 = math.sign(p2) * math.random(-math.abs(p2) * 100, math.abs(p2) * 100) / 100
+    local v6 = p3 * math.random(50, 150) / 100
+    local v7 = Model.Torso.Velocity.Magnitude / 5 + 1
+
+    if v1.States.Seated then
+        v7 = 1
+    end
+
+    local v8 = Vector3.new(v5, v6, 0) * v7
+
+    PrimaryPart.AssemblyLinearVelocity = PrimaryPart.AssemblyLinearVelocity + Vector3.new(v5 / 2, v6, v6) * v7
+    PrimaryPart.AssemblyAngularVelocity = PrimaryPart.AssemblyAngularVelocity + v8
+end
+function t2.Walk(p1, p2, p3) --[[ Walk | Line: 289 | Upvalues: World (copy), cl_draw_character_velocity (copy), Gizmo (copy) ]]
+    debug.profilebegin("CharacterWalk")
+
+    local v1 = World.get(p1)
+    local v2 = if v1 then v1.Character else v1
+
+    if not v2 then
+        return
+    end
+
+    local Model = v2.Model
+
+    if not Model then
+        return
+    end
+
+    local Humanoid = Model:FindFirstChild("Humanoid")
+
+    if v1.DamageRig and v1.DamageRig.Ragdolled == true then
+        World.patch(p1, {
+            Character = {
+                MoveVelocity = Vector3.new(0, 0, 0),
+                TargetMoveVelocity = Vector3.new(0, 0, 0)
+            }
+        })
+
+        return
+    end
+
+    local v3 = v2.HoldingSlowdown or 1
+    local TargetMoveVelocity = v2.TargetMoveVelocity
+    local MoveVelocity = v2.MoveVelocity
+    local LastStableTick = v2.LastStableTick
+
+    if v2.States.Seated then
+        Humanoid:Move(Vector3.new(0, 0, 0))
+        World.patch(p1, {
+            Character = {
+                LastStableTick = tick()
+            }
+        })
+
+        return
+    end
+
+    local AssemblyLinearVelocity = Model.Torso.AssemblyLinearVelocity
+    local UpVector = Model.Torso.CFrame.UpVector
+    local v4 = UpVector:Cross(AssemblyLinearVelocity.Unit)
+
+    if cl_draw_character_velocity:equals(1) then
+        Gizmo.SetStyle(Color3.fromRGB(0, 13, 255))
+        Gizmo.Arrow:Draw(Model.Torso.Position, Model.Torso.Position + AssemblyLinearVelocity.Unit, 0.1, 0.1, 6)
+        Gizmo.SetStyle(Color3.fromRGB(255, 0, 0))
+        Gizmo.Arrow:Draw(Model.Torso.Position, Model.Torso.Position + v4.Unit, 0.1, 0.1, 6)
+        Gizmo.SetStyle(Color3.fromRGB(0, 255, 8))
+        Gizmo.Arrow:Draw(Model.Torso.Position, Model.Torso.Position + UpVector.Unit, 0.1, 0.1, 6)
+    end
+
+    if Humanoid then
+        if Humanoid:GetState() ~= Enum.HumanoidStateType.FallingDown and Humanoid:GetState() ~= Enum.HumanoidStateType.Freefall then
+            World.patch(p1, {
+                Character = {
+                    LastStableTick = tick()
+                }
+            })
+        end
+
+        if Humanoid.FloorMaterial == Enum.Material.Air then
+            if Humanoid:GetState() == Enum.HumanoidStateType.Freefall and tick() - LastStableTick > 0.5 then
+                Humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
+
+                local Torso = Model.Torso
+
+                Torso.AssemblyAngularVelocity = Torso.AssemblyAngularVelocity + v4 * 5
+            end
+        else
+            tick()
+
+            local MaxHealth = v1.DamageRig.Limbs.LLeg.MaxHealth
+            local v5 = v1.DamageRig.Limbs.LLeg.Health or MaxHealth
+            local v6 = v1.DamageRig.Limbs.RLeg.Health or MaxHealth
+
+            TargetMoveVelocity = p2 * (v2.MovementRatio or 1) * (-v2.CrouchRatio ^ 0.2 * 0.4 + 1) * v3
+
+            if v5 < MaxHealth or v6 < MaxHealth then
+                TargetMoveVelocity = TargetMoveVelocity * math.max((v5 + v6) / 2 / MaxHealth, 0.4)
+            end
+
+            MoveVelocity = MoveVelocity + (TargetMoveVelocity - MoveVelocity) * math.clamp(p3 * 1.5, 0, 1)
+            Humanoid.WalkSpeed = 10
+
+            if MoveVelocity.Magnitude > 0.1 then
+                Humanoid:Move(MoveVelocity.Unit * math.min(MoveVelocity.Magnitude, 1))
+            else
+                Humanoid:Move(Vector3.new(0, 0, 0))
+            end
+        end
+    end
+
+    if cl_draw_character_velocity:equals(1) then
+        local RootPart = Humanoid.RootPart
+
+        Gizmo.SetStyle(Color3.fromRGB(110, 149, 255))
+        Gizmo.Arrow:Draw(RootPart.Position, RootPart.Position + MoveVelocity, 0.1, 0.1, 6)
+        Gizmo.Text:Draw(RootPart.Position + MoveVelocity, (tostring(MoveVelocity)))
+        Gizmo.SetStyle(Color3.fromRGB(28, 157, 255))
+        Gizmo.Arrow:Draw(RootPart.Position, RootPart.Position + TargetMoveVelocity, 0.1, 0.1, 6)
+        Gizmo.Text:Draw(RootPart.Position + TargetMoveVelocity, (tostring(TargetMoveVelocity)))
+    end
+
+    World.patch(p1, {
+        Character = {
+            MoveVelocity = MoveVelocity,
+            TargetMoveVelocity = TargetMoveVelocity
+        }
+    })
+    debug.profileend()
+end
+function t2.UpdateIK(p1, p2) --[[ UpdateIK | Line: 394 | Upvalues: World (copy), InverseKinematics (copy), t4 (copy), Raycast2 (copy), FootstepIgnoreFunction (copy), cl_draw_character_ik (copy), Gizmo (copy) ]]
+    debug.profilebegin("CharacterUpdateIK")
+
+    local v1 = World.get(p1)
+
+    if not (v1 and (v1.Character and (v1.Character and v1.Character.Model))) then
+        debug.profileend()
+
+        return
+    end
+
+    local Character = v1.Character
+    local v2 = nil
+    local LeftHip = Character.baseM6D.Hips.LeftHip
+    local RightHip = Character.baseM6D.Hips.RightHip
+
+    if Character.States.Seated then
+        World.patch(p1, {
+            Character = {
+                RawCharacterTransform = {
+                    WaistBounceVector = Vector3.new(0, 0, 0),
+                    DesiredLeftHipC0 = LeftHip * CFrame.Angles(0, 0, -1.2217304763960306),
+                    DesiredRightHipC0 = RightHip * CFrame.Angles(0, 0, 1.2217304763960306),
+                    WaistSwayAngles = CFrame.Angles(0, 0, 0),
+                    Lean = Character.Lean
+                }
+            }
+        })
+    else
+        local Model = Character.Model
+        local Humanoid = Model:FindFirstChild("Humanoid")
+
+        if not Humanoid then
+            warn("No humanoid found when updating ik")
+
+            return
+        end
+
+        local CharacterIK = Character.CharacterIK
+        local sum = Character.StepTick or 0
+        local ikParts = Character.ikParts
+        local leftFoot = ikParts.leftFoot
+        local rightFoot = ikParts.rightFoot
+        local v3 = p2 * 60
+
+        if CharacterIK and CharacterIK.Character == Model then
+            local v4 = Humanoid.RootPart.Velocity * Vector3.new(1, 0, 1)
+            local v6 = Vector3.new(0, math.clamp(Humanoid.RootPart.Velocity.Y, -16, 0), 0)
+            local v7 = Humanoid.RootPart.CFrame.RightVector:Dot(v4.unit)
+            local v8 = Humanoid.RootPart.CFrame.LookVector:Dot(v4.unit)
+            local v9 = v4.Magnitude / 8
+            local v10 = v6:Abs() / 16
+            local v11 = 1.2 * v9
+            local v12 = 2 * v9
+            local v13 = Humanoid.RootPart.CFrame.LookVector:Dot(Humanoid.MoveDirection) < -0.1
+            local v17 = (v4.Magnitude > t4.activationVelocity and math.rad(v7 * t4.maxAngle) or 0) * (if v13 then 1 else -1)
+            local v18 = RaycastParams.new()
+
+            v18.FilterType = Enum.RaycastFilterType.Exclude
+            v18.FilterDescendantsInstances = { Model }
+
+            local v19 = Character.CrouchRatio or 0
+            local v20 = Vector3.new(0, v19 * 0.4, 0)
+
+            CFrame.Angles(0, 0, 0)
+
+            local v21
+
+            if v4.Magnitude > 0.5 then
+                local v24 = sum + math.pi
+                local v27 = v9 * 0.15 * math.tanh(math.pi * (if v24 == 0 then 0 else math.cos(v24)))
+
+                v21 = CFrame.Angles(math.rad((Humanoid.RootPart.CFrame.LookVector:Dot(v4))) + v19 * math.pi / 10, v27, (math.rad(-Humanoid.RootPart.CFrame.RightVector:Dot(v4.Unit * 2))))
+            else
+                v21 = CFrame.Angles(math.rad(math.sin((tick())) - 1) * 2, math.rad((math.sin(tick() * 2))) / 2, 0)
+            end
+
+            local v39 = false
+
+            for k, v in pairs(ikParts) do
+                if v == nil then
+                    v39 = true
+
+                    break
+                end
+            end
+
+            if not v39 and (v4.Magnitude < t4.maxIkVelocity and (leftFoot and rightFoot)) then
+                local sum2 = leftFoot.WorldCFrame.Position - ikParts.leftHip.WorldCFrame.Position
+                local sum3 = rightFoot.WorldCFrame.Position - ikParts.rightHip.WorldCFrame.Position
+                local v40 = v4.Magnitude / 50 * math.sign(v8) * v3
+
+                sum = sum + v40 * (if Humanoid.FloorMaterial == Enum.Material.Air then 0.5 else 1)
+
+                if v4.Magnitude > 1 then
+                    local v42 = leftFoot.WorldCFrame * CFrame.Angles(0, v17, 0)
+                    local v43 = v11 * -math.cos(sum + math.pi)
+
+                    sum2 = sum2 + v42:VectorToWorldSpace((Vector3.new(0, v43, v12 * math.sin(sum + math.pi))))
+
+                    local v45 = rightFoot.WorldCFrame * CFrame.Angles(0, v17, 0)
+                    local v46 = v11 * -math.cos(sum)
+
+                    sum3 = sum3 + v45:VectorToWorldSpace((Vector3.new(0, v46, v12 * math.sin(sum))))
+                else
+                    sum = 0
+                end
+
+                local v48 = ikParts.leftHip.WorldCFrame.Position + sum2
+                local v49 = ikParts.rightHip.WorldCFrame.Position + sum3
+                local v50 = Raycast2.Raycast(ikParts.leftHip.WorldCFrame.Position, sum2, v18, FootstepIgnoreFunction)
+                local v51 = Raycast2.Raycast(ikParts.rightHip.WorldCFrame.Position, sum3, v18, FootstepIgnoreFunction)
+
+                if cl_draw_character_ik:equals(1) then
+                    Gizmo.SetStyle(Color3.fromRGB(99, 0, 0))
+                    Gizmo.Ray:Draw(ikParts.leftHip.WorldCFrame.Position, v48)
+
+                    if v50 then
+                        Gizmo.Box:Draw(CFrame.new(v50.Position, v50.Normal), Vector3.new(0.1, 0.1, 0.25))
+                    end
+
+                    Gizmo.SetStyle(Color3.fromRGB(0, 90, 0))
+                    Gizmo.Ray:Draw(ikParts.rightHip.WorldCFrame.Position, v49)
+
+                    if v51 then
+                        Gizmo.Box:Draw(CFrame.new(v51.Position, v51.Normal), Vector3.new(0.1, 0.1, 0.25))
+                    end
+                end
+
+                if v50 and (v50.Material ~= Enum.Material.Water and v50.Instance.CanCollide) then
+                    LeftHip = CharacterIK:LegIK("Left", v50.Position + v20) - v20
+
+                    if not Character.FeetMaterial.Left and v50.Instance.Anchored then
+                        v2 = v50.Material
+                    end
+
+                    Character.FeetMaterial.Left = v50.Material
+                else
+                    LeftHip = CharacterIK:LegIK("Left", v48 + v10 + v20) - v20
+                    Character.FeetMaterial.Left = nil
+                end
+
+                if v51 and (v51.Material ~= Enum.Material.Water and v51.Instance.CanCollide) then
+                    RightHip = CharacterIK:LegIK("Right", v51.Position + v20) - v20
+
+                    if not Character.FeetMaterial.Right and v51.Instance.Anchored then
+                        v2 = v51.Material
+                    end
+
+                    Character.FeetMaterial.Right = v51.Material
+                else
+                    RightHip = CharacterIK:LegIK("Right", v49 + v10 + v20) - v20
+                    Character.FeetMaterial.Right = nil
+                end
+            end
+
+            local t = {}
+            local t2 = {
+                StepTick = sum
+            }
+            local t3 = {
+                DesiredLeftHipC0 = LeftHip * CFrame.Angles(0, v17, 0),
+                DesiredRightHipC0 = RightHip * CFrame.Angles(0, v17, 0)
+            }
+            local v54 = 2 * sum
+            local v57 = v9 * 0.15 * Vector3.new(0, if v54 == 0 then 0 else math.cos(v54), 0)
+
+            t3.WaistBounceVector = v57 + Vector3.new(0, Character.CrouchRatio or 0, 0)
+            t3.WaistSwayAngles = v21
+            t3.Lean = Character.Lean
+            t2.RawCharacterTransform = t3
+            t2.FeetMaterial = Character.FeetMaterial
+            t.Character = t2
+            World.patch(p1, t)
+        else
+            World.patch(p1, {
+                Character = {
+                    CharacterIK = InverseKinematics.New(Model)
+                }
+            })
+
+            return
+        end
+    end
+
+    debug.profileend()
+
+    return v2
+end
+function t2.UpdateArms(p1) --[[ UpdateArms | Line: 535 | Upvalues: World (copy), sin (copy), t2 (copy), CalcArmGrab (copy) ]]
+    debug.profilebegin("CharacterUpdateArms")
+
+    local v1 = World.get(p1)
+
+    if not (v1 and (v1.Character and (v1.Character and v1.Character.Model))) then
+        return
+    end
+
+    local Character = v1.Character
+    local Model = Character.Model
+    local Head = Model:WaitForChild("Head")
+    local Humanoid = Model:WaitForChild("Humanoid")
+    local LeftShoulder = Model:FindFirstChild("LeftShoulder", true)
+    local RightShoulder = Model:FindFirstChild("RightShoulder", true)
+    local baseM6D = Character.baseM6D
+    local v2 = if Humanoid.RootPart then Humanoid.RootPart.AssemblyLinearVelocity or 0 else 0
+
+    if Character.States.Seated then
+        v2 = Vector3.new(0, 0, 0)
+    end
+
+    local v4 = Vector3.new(0, math.clamp(v2.Y, -16, 0), 0)
+    local v5 = (Vector3.new(1, 0, 1) * v2).Magnitude / 10
+    local v6 = v4:Abs() / 16
+    local v8 = World.get(Character.Hands.RightHandHolding) and Character.Hands.RightHandHolding
+    local v9 = World.get(Character.Hands.LeftHandHolding) and Character.Hands.LeftHandHolding
+    local ReloadTarget = Character.Hands.ReloadTarget
+    local ThrowFloat = Character.ThrowFloat
+    local v10 = v8 and v9
+    local v11 = nil
+    local v12 = nil
+    local v13 = 0
+    local v14 = 0
+    local v15 = 1
+    local v17 = math.tanh(math.pi * sin(Character.StepTick or 0))
+
+    local function addSlowdown(p1) --[[ addSlowdown | Line: 580 | Upvalues: World (ref), v15 (ref) ]]
+        local v1 = World.get(p1)
+
+        v15 = v15 * (v1.Holdable.Poses[v1.Holdable.DesiredPose].WalkSpeedModifier or 1)
+    end
+
+    local function handleHandHolding(p12, p2) --[[ handleHandHolding | Line: 587 | Upvalues: World (ref), v10 (copy), Head (copy), v11 (ref), t2 (ref), p1 (copy), LeftShoulder (copy), RightShoulder (copy), ReloadTarget (copy), v8 (copy), v12 (ref), v13 (ref), v14 (ref) ]]
+        local v1 = World.get(p2)
+        local v2 = v1.Model.Instance
+        local v3 = v1.Holdable.Poses[v1.Holdable.DesiredPose]
+        local Pivot = v3.Pivot
+        local Rotation = v3.Rotation
+        local v4 = p12 == "Left"
+        local v5 = nil
+        local _2 = if v10 and v2:FindFirstChild("LeftHand", true) then 0.6 else 1
+
+        if v4 then
+            Pivot = Pivot * Vector3.new(-1, 1, 1)
+        end
+
+        if not (v2 and v2.PrimaryPart) then
+            return nil
+        end
+
+        local PrimaryPart = v2.PrimaryPart
+        local AlignPosition = PrimaryPart:FindFirstChildOfClass("AlignPosition")
+        local AlignOrientation = PrimaryPart:FindFirstChildOfClass("AlignOrientation")
+
+        if not AlignPosition then
+            local AlignPosition2 = Instance.new("AlignPosition")
+            local Attachment = Instance.new("Attachment", PrimaryPart)
+
+            AlignPosition2.Mode = Enum.PositionAlignmentMode.OneAttachment
+            AlignPosition2.Attachment0 = Attachment
+            AlignPosition2.Parent = PrimaryPart
+            AlignPosition = AlignPosition2
+        end
+
+        if not AlignOrientation then
+            local AlignOrientation2 = Instance.new("AlignOrientation")
+
+            AlignOrientation2.Attachment0 = Instance.new("Attachment", PrimaryPart)
+            AlignOrientation2.Mode = Enum.OrientationAlignmentMode.OneAttachment
+            AlignOrientation2.Parent = PrimaryPart
+            AlignOrientation = AlignOrientation2
+        end
+
+        local LeftHand = PrimaryPart:FindFirstChild("LeftHand")
+        local RightHand = PrimaryPart:FindFirstChild("RightHand")
+        local v6 = Head.CFrame:PointToWorldSpace(Pivot)
+        local v102 = Head.CFrame.Rotation * CFrame.fromEulerAnglesXYZ(math.rad(Rotation.X), math.rad(Rotation.Y), (math.rad(Rotation.Z)))
+        local v112 = RightHand and RightHand.WorldCFrame or PrimaryPart.CFrame
+        local v122 = if LeftHand then LeftHand.WorldCFrame else LeftHand
+        local v132
+
+        if v4 then
+            if v11 then
+                v132 = t2.CalcArmGrab(p1, LeftShoulder, v112) or nil
+            elseif v122 then
+                local v142 = t2.CalcArmGrab(p1, LeftShoulder, v112)
+                local v15
+
+                if v122 then
+                    v15 = t2.CalcArmGrab(p1, RightShoulder, v122)
+
+                    if v15 then
+                        v5 = v142
+                    else
+                        v15 = nil
+                        v5 = v142
+                    end
+                else
+                    v15 = nil
+                    v5 = v142
+                end
+
+                v132 = v15
+            else
+                v132 = t2.CalcArmGrab(p1, LeftShoulder, v112)
+            end
+        else
+            local v17 = t2.CalcArmGrab(p1, RightShoulder, v112)
+            local v18
+
+            if v122 then
+                v18 = t2.CalcArmGrab(p1, LeftShoulder, v122)
+
+                if v18 then
+                    v5 = v17
+                else
+                    v18 = nil
+                    v5 = v17
+                end
+            else
+                v18 = nil
+                v5 = v17
+            end
+
+            v132 = v18
+        end
+
+        if ReloadTarget and v4 then
+            local v19 = World.get(v8)
+            local v20 = if v19 then v19.Container else v19
+
+            if v20 then
+                local WorldCFrame = v20.PointInstances[tostring(ReloadTarget)].Instance.WorldCFrame
+
+                v6 = WorldCFrame.Position
+                v12 = t2.CalcArmGrab(p1, LeftShoulder, WorldCFrame)
+                v12 = v12 * (CFrame.Angles(0, 0, 0) * CFrame.new(0, 0.25, 0))
+            end
+        end
+
+        v13 = v13 + (v3.HeadTilt or 0) * (if v4 then -1 else 1)
+        v14 = v14 + (v3.TorsoTilt or 0) * (if v4 then -1 else 1)
+        AlignPosition.Position = v6
+        AlignOrientation.CFrame = v102
+
+        return v5, v132
+    end
+
+    if v8 then
+        if ThrowFloat > 0 then
+            v11 = baseM6D.Arms.RightShoulder * CFrame.Angles(0, 0, (math.rad(ThrowFloat * 180 + 30)))
+        elseif RightShoulder.Enabled then
+            local v18, v19 = handleHandHolding("Right", v8)
+
+            if not (v9 or v12) then
+                v12 = v19
+            end
+
+            v11 = v18
+        end
+
+        local v20 = World.get(v8)
+
+        v15 = v15 * (v20.Holdable.Poses[v20.Holdable.DesiredPose].WalkSpeedModifier or 1)
+    end
+
+    if v9 and not ReloadTarget then
+        if LeftShoulder.Enabled then
+            local v21, v22 = handleHandHolding("Left", v9)
+
+            if not v8 then
+                v11 = v21
+            end
+
+            v12 = v22
+        end
+
+        local v23 = World.get(v9)
+
+        v15 = v15 * (v23.Holdable.Poses[v23.Holdable.DesiredPose].WalkSpeedModifier or 1)
+    end
+
+    local v24 = v11 or World.Null
+    local v25 = v12 or World.Null
+    local v27 = Model.HumanoidRootPart.CFrame
+
+    if Character.DriveSeat then
+        local LookVector = v27.LookVector
+        local RightVector = v27.RightVector
+        local UpVector = v27.UpVector
+        local Position = v27.Position
+
+        v11 = v11 or CalcArmGrab(baseM6D.Arms.RightShoulder, RightShoulder, Position + UpVector + LookVector * 2 + RightVector * 1)
+        v12 = v12 or CalcArmGrab(baseM6D.Arms.LeftShoulder, LeftShoulder, Position + UpVector + LookVector * 2 - RightVector * 1)
+    end
+
+    v11 = v11 or CFrame.new(baseM6D.Arms.RightShoulder.Position - Vector3.new(0, 0.1, 0)) * CFrame.Angles(0, 1.6707963267948966, 0) * CFrame.Angles(-v5 / 10 - v6.Magnitude / 2, 0, v5 * v17)
+    v12 = v12 or CFrame.new(baseM6D.Arms.LeftShoulder.Position - Vector3.new(0, 0.1, 0)) * CFrame.Angles(0, -1.6707963267948966, 0) * CFrame.Angles(-v5 / 10 - v6.Magnitude / 2, 0, v5 * v17)
+
+    if not (v11 and v12) then
+        debug.profileend()
+
+        return
+    end
+
+    World.patch(p1, {
+        Character = {
+            RawCharacterTransform = {
+                DesiredLeftArmC0 = v12,
+                DesiredRightArmC0 = v11,
+                HeadTilt = v13,
+                TorsoTilt = v14,
+                RightHandActive = v24,
+                LeftHandActive = if ReloadTarget then nil else v25
+            },
+            HoldingSlowdown = v15
+        }
+    })
+    debug.profileend()
+end
+function t2.Dive(p1) --[[ Dive | Line: 764 | Upvalues: World (copy), ReplicatedStorage (copy) ]]
+    local v1 = World.get(p1)
+    local v2 = if v1 then v1.Character else v1
+
+    if not v2 then
+        return
+    end
+
+    local Model = v2.Model
+    local Humanoid = Model.Humanoid
+
+    if Humanoid:GetState() == Enum.HumanoidStateType.Running then
+        require(ReplicatedStorage.Components).DamageRig.ToggleRagdoll(p1, true)
+        ReplicatedStorage.Remotes.ToServer.Ragdoll:FireServer()
+
+        local v3 = Model.Torso.CFrame.UpVector:Cross(Model.Torso.AssemblyLinearVelocity.Unit)
+        local Torso = Model.Torso
+
+        Torso.AssemblyAngularVelocity = Torso.AssemblyAngularVelocity + v3 * 500
+        Model.HumanoidRootPart.AssemblyLinearVelocity = Humanoid.MoveDirection * 60 + Vector3.new(0, 20, 0)
+    end
+end
+function t2.UpdateCharacterRoot(p1, p2) --[[ UpdateCharacterRoot | Line: 782 | Upvalues: World (copy) ]]
+    local v1 = World.get(p1)
+
+    if not (v1 and v1.Character) then
+        print("No Character Found")
+
+        return
+    end
+
+    local Character = v1.Character
+    local HumanoidRootPart = Character.Model:FindFirstChild("HumanoidRootPart")
+
+    if not (Character.States.Seated or HumanoidRootPart:FindFirstChild("SeatWeld")) then
+        local Humanoid = Character.Model:WaitForChild("Humanoid")
+
+        Humanoid.RootPart.CFrame = Humanoid.RootPart.CFrame:Lerp(CFrame.new(Humanoid.RootPart.CFrame.Position) * CFrame.Angles(0, Character.LookVector2.X, 0), 0.1 * (p2 * 60))
+    end
+end
+function t2.CalculateTransform(p1, p2) --[[ CalculateTransform | Line: 797 | Upvalues: World (copy) ]]
+    local v1 = World.get(p1)
+
+    if not (v1 and v1.Character) then
+        print("No Character Found")
+
+        return
+    end
+
+    local Character = v1.Character
+    local Model = Character.Model
+
+    if not Model then
+        warn("No character found when updating")
+
+        return
+    end
+
+    local Humanoid = Model:FindFirstChild("Humanoid")
+
+    if not (Humanoid and Model:FindFirstChild("Head")) then
+        warn("Character misshapen")
+
+        return
+    end
+
+    if not Character.CharacterIK then
+        return
+    end
+
+    local Neck = Model:FindFirstChild("Neck", true)
+    local Seated = Character.States.Seated
+    local v2 = Character.RawCharacterTransform or {}
+    local v3 = v2.DesiredLeftHipC0 or CFrame.new()
+    local v4 = v2.DesiredRightHipC0 or CFrame.new()
+    local v5 = v2.DesiredLeftArmC0 or CFrame.new()
+    local v6 = v2.DesiredRightArmC0 or CFrame.new()
+    local v8 = v2.WaistSwayAngles or CFrame.new()
+    local v9 = v2.LookVector2 or Vector2.new(0, 0)
+    local v11 = math.rad(v2.TorsoTilt or 0)
+    local v13 = math.rad(v2.HeadTilt or 0)
+    local v15 = math.rad(v2.Lean or 0)
+    local v16 = v9.X - math.rad(Humanoid.RootPart.Orientation.Y)
+    local t = {}
+    local v17 = CFrame.new(Neck.C0.Position)
+    local fromEulerAnglesYXZ = CFrame.fromEulerAnglesYXZ
+    local v18 = if Seated then 0 else v9.Y
+
+    t.Head = v17 * fromEulerAnglesYXZ(v18, if Seated then 0 else v16, 0) * v8 * CFrame.Angles(0, 0, -(v15 / 2)) * CFrame.Angles(0, -v11, v13)
+
+    local v22 = CFrame.Angles(0, if Seated and v16 then v16 else 0, 0)
+    local Angles2 = CFrame.Angles
+
+    t.Torso = v22 * Angles2(math.clamp(v9.Y, -0.8726646259971648, 0.8726646259971648), v11, math.pi) * v8 * (CFrame.Angles(0, 0, v15) + Vector3.new(v15, 0, 0)) * CFrame.new(v2.WaistBounceVector or Vector3.new(0, 0, 0)) - Vector3.new(0, 1, 0)
+    t.LeftLeg = v3
+    t.LeftArm = v5
+    t.RightLeg = v4
+    t.RightArm = v6
+    t.LeftHandActive = v2.LeftHandActive
+    t.RightHandActive = v2.RightHandActive
+    Character.Transform = t
+end
+function t2.LerpToCurrentTransform(p1, p2) --[[ LerpToCurrentTransform | Line: 860 | Upvalues: World (copy), cl_draw_character_hands (copy), Gizmo (copy), cl_draw_character_m6d (copy) ]]
+    local Character = World.get(p1).Character
+    local Model = Character.Model
+    local Humanoid = Model:FindFirstChildOfClass("Humanoid")
+
+    Model:FindFirstChild("Head")
+
+    local Transform = Character.Transform
+
+    if not Character.Transform then
+        return
+    end
+
+    local v1 = 1 - math.pow(0.0001, p2 or 0)
+    local t = {
+        Torso = { Humanoid.RootPart:FindFirstChild("RootJoint"), v1 },
+        LeftLeg = { Model:FindFirstChild("Left Hip", true), v1 },
+        RightLeg = { Model:FindFirstChild("Right Hip", true), v1 }
+    }
+    local t2 = {}
+    local LeftShoulder = Model:FindFirstChild("LeftShoulder", true)
+    local v2 = if Transform.LeftHandActive then 1 else v1
+
+    t2[1] = LeftShoulder
+    t2[2] = v2
+    t.LeftArm = t2
+
+    local t3 = {}
+    local RightShoulder = Model:FindFirstChild("RightShoulder", true)
+    local v3 = if Transform.RightHandActive then 1 else v1
+
+    t3[1] = RightShoulder
+    t3[2] = v3
+    t.RightArm = t3
+    t.Head = { Model:FindFirstChild("Neck", true), v1 }
+
+    if cl_draw_character_hands:equals(1) then
+        Gizmo.SetStyle(Color3.new(0.882353, 0, 1))
+        Gizmo.Sphere:Draw(Transform.RightArm * Transform.RightHoldingCFrame, 0.1, 12, 360)
+        Gizmo.SetStyle(Color3.new(0, 0.917647, 1))
+        Gizmo.Sphere:Draw(Transform.LeftArm * Transform.LeftHoldingCFrame, 0.1, 12, 360)
+    end
+
+    for v4, v5 in t do
+        if cl_draw_character_m6d:equals(1) then
+            local v6 = v5[1].Part0.CFrame * Transform[v4]
+
+            Gizmo.SetStyle(Color3.new(1, 0.490196, 0.0745098))
+            Gizmo.Sphere:Draw(v6, 0.1, 12, 360)
+            Gizmo.SetStyle(Color3.new(0.615686, 0.372549, 0.160784))
+            Gizmo.Ray:Draw(v6.Position, v5[1].Part0.Position)
+
+            if v5[1].Part1 then
+                Gizmo.Ray:Draw(v6.Position, v5[1].Part1.Position)
+            end
+        end
+
+        v5[1].C0 = v5[1].C0:Lerp(Transform[v4], v5[2])
+    end
+
+    Character.LastUpdate = tick()
+end
+function t2.Destroy(p1, p2) --[[ Destroy | Line: 906 ]]
+    p2.Character.Model:Destroy()
+end
+
+return setmetatable(t2, t)
