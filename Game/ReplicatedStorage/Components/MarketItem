@@ -1,0 +1,34 @@
+-- Script Path: game:GetService("ReplicatedStorage").Components.MarketItem
+-- Took 0.07s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local t = {}
+local t2 = {
+    CalculatePrice = function(p1) --[[ CalculatePrice | Line: 23 ]]
+        return math.floor(p1.Price * (p1.DiscountMultiplier or 1))
+    end
+}
+
+function t.__call(p1, p2) --[[ __call | Line: 27 ]]
+    local t = {
+        Price = p2.Price or 99999,
+        Category = p2.Category or ""
+    }
+
+    t.ForSale = if p2.ForSale == nil then true else p2.ForSale
+    t.Name = p2.Name or "MarketItemName"
+    t.Description = {
+        Long = p2.Description.Long or "Long Market Item Description",
+        Short = p2.Description.Short or "Short Market Desc."
+    }
+    t.BuyLimit = p2.BuyLimit or 20
+    t.OnPurchaseFunc = p2.OnPurchaseFunc
+    t.DiscountMultiplier = p2.DiscountMultiplier
+    t.TeamBuyLimit = p2.TeamBuyLimit or 999
+    t.HideInBuyMenu = if p2.HideInBuyMenu == nil then false else p2.HideInBuyMenu
+
+    return t
+end
+
+return setmetatable(t2, t)
