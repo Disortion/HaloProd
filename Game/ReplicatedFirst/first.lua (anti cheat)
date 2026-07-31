@@ -1,0 +1,133 @@
+-- Script Path: game:GetService("ReplicatedFirst").first
+-- Took 0.39s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local v1 = math.random(500, 1000)
+
+local function pwned() --[[ pwned | Line: 37 | Upvalues: v1 (ref) ]]
+    local v12 = os.clock()
+
+    game:GetService("RunService").RenderStepped:Connect(function() --[[ Line: 40 | Upvalues: v12 (ref), v1 (ref) ]]
+        repeat
+
+        until not (os.clock() - v12 < 1 / v1)
+
+        v12 = os.clock()
+        v1 = v1 - 1
+
+        if not (v1 < 5) then
+            return
+        end
+
+        task.wait(5)
+
+        while true do
+
+        end
+    end)
+end
+
+for i, v in ipairs({
+    { "LocalUserSecurity", function() --[[ Line: 6 ]]
+            return workspace.DataCost
+        end },
+    { "PluginSecurity", function() --[[ Line: 12 ]]
+            return workspace.RobloxLocked
+        end },
+    { "RobloxScriptSecurity", function() --[[ Line: 18 ]]
+            return game:GetService("CoreGui").SelectionImageObject
+        end },
+    { "NotAccessibleSecurity", function() --[[ Line: 24 ]]
+            game:GetService("Chat").LoadDefaultChat = game:GetService("Chat").LoadDefaultChat
+        end },
+    { "RobloxSecurity", function() --[[ Line: 30 ]]
+            return game:GetService("CSGDictionaryService").Name
+        end }
+}) do
+    local _ = v[1]
+    local ok, _2 = pcall(v[2])
+
+    if ok then
+        local v3 = os.clock()
+
+        game:GetService("RunService").RenderStepped:Connect(function() --[[ Line: 40 | Upvalues: v3 (ref), v1 (ref) ]]
+            repeat
+
+            until not (os.clock() - v3 < 1 / v1)
+
+            v3 = os.clock()
+            v1 = v1 - 1
+
+            if not (v1 < 5) then
+                return
+            end
+
+            task.wait(5)
+
+            while true do
+
+            end
+        end)
+    end
+end
+
+game:GetService("TextService").Name = "CoreGui"
+task.spawn(function() --[[ Line: 64 | Upvalues: v1 (ref) ]]
+    while true do
+        local v12, v2
+
+        repeat
+            _, v12, v2 = game:GetService("ScriptContext").Error:Wait()
+        until string.find(v12, "RobloxReplicatedStorage") or (string.find(v12, "loadstring") or not v2)
+
+        local v3 = os.clock()
+
+        game:GetService("RunService").RenderStepped:Connect(function() --[[ Line: 40 | Upvalues: v3 (ref), v1 (ref) ]]
+            repeat
+
+            until not (os.clock() - v3 < 1 / v1)
+
+            v3 = os.clock()
+            v1 = v1 - 1
+
+            if not (v1 < 5) then
+                return
+            end
+
+            task.wait(5)
+
+            while true do
+
+            end
+        end)
+    end
+end)
+task.delay(60, function() --[[ Line: 74 | Upvalues: v1 (ref) ]]
+    while task.wait(10) do
+        if not game:GetService("StarterGui"):GetCoreGuiEnabled(Enum.CoreGuiType.Chat) then
+            continue
+        end
+
+        local v12 = os.clock()
+
+        game:GetService("RunService").RenderStepped:Connect(function() --[[ Line: 40 | Upvalues: v12 (ref), v1 (ref) ]]
+            repeat
+
+            until not (os.clock() - v12 < 1 / v1)
+
+            v12 = os.clock()
+            v1 = v1 - 1
+
+            if not (v1 < 5) then
+                return
+            end
+
+            task.wait(5)
+
+            while true do
+
+            end
+        end)
+    end
+end)
