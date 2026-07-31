@@ -1,0 +1,47 @@
+-- Script Path: game:GetService("ReplicatedStorage").Shared.SoundBox
+-- Took 0.07s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local AudioClient = require(ReplicatedStorage.Shared.AudioClient)
+local t = {}
+local PlaySoundAtLocation = workspace.Terrain:FindFirstChild("PlaySoundAtLocation") or Instance.new("Attachment", workspace.Terrain)
+
+PlaySoundAtLocation.Name = "PlaySoundAtLocation"
+function t.PlaySoundAtLocation(p1, p2, p3, p4) --[[ PlaySoundAtLocation | Line: 8 | Upvalues: PlaySoundAtLocation (copy), AudioClient (copy) ]]
+    task.spawn(function() --[[ Line: 9 | Upvalues: p1 (ref), PlaySoundAtLocation (ref), p2 (copy), p3 (ref), p4 (copy), AudioClient (ref) ]]
+        if p1:IsA("Folder") then
+            local v1 = p1:GetChildren()
+
+            p1 = v1[math.random(#v1)]
+        end
+
+        local v2 = PlaySoundAtLocation:Clone()
+
+        v2.WorldCFrame = CFrame.new(p2)
+        v2.Parent = workspace.Terrain
+
+        local AudioPlayer = Instance.new("AudioPlayer", v2)
+        local AudioEmitter = Instance.new("AudioEmitter", v2)
+
+        p3 = p3 or 1
+        AudioPlayer.Asset = p1:IsA("Sound") and p1.SoundId or p1:IsA("AudioPlayer") and p1.Asset
+        AudioPlayer.PlaybackSpeed = (p3 or 1) * math.random(90, 110) / 100
+        AudioPlayer.Volume = p4 or AudioPlayer.Volume
+        AudioClient.Wire(AudioPlayer, AudioEmitter)
+        AudioPlayer:Play()
+
+        repeat
+            task.wait()
+        until AudioPlayer.IsReady
+
+        task.delay(AudioPlayer.TimeLength, function() --[[ Line: 33 | Upvalues: AudioPlayer (copy), AudioEmitter (copy), v2 (copy) ]]
+            AudioPlayer:Destroy()
+            AudioEmitter:Destroy()
+            v2:Destroy()
+        end)
+    end)
+end
+
+return t
