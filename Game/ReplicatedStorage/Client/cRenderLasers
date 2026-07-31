@@ -1,0 +1,116 @@
+-- Script Path: game:GetService("ReplicatedStorage").Client.cRenderLasers
+-- Took 0.09s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local BulletFactory = require(ReplicatedStorage.Components.BulletFactory)
+local Raycast2 = require(ReplicatedStorage.Shared.Raycast2)
+local Trove = require(ReplicatedStorage.Shared.Trove)
+local t = {}
+local v1 = Color3.new(255/255, 0/255, 0/255)
+local LaserBeam = Instance.new("Beam")
+
+LaserBeam.Brightness = 10000
+LaserBeam.Name = "LaserBeam"
+LaserBeam.Color = ColorSequence.new(v1)
+LaserBeam.Width1 = 0
+LaserBeam.Width0 = 0.05
+LaserBeam.FaceCamera = true
+LaserBeam.Transparency = NumberSequence.new(0.5)
+
+local Part = Instance.new("Part")
+
+Part.Shape = Enum.PartType.Ball
+Part.Size = Vector3.new(0.2, 0.2, 0.2)
+Part.Color = v1
+Part.Anchored = true
+Part.CanCollide = false
+Part.Material = Enum.Material.Neon
+
+local GlowParticle = Instance.new("ParticleEmitter")
+
+GlowParticle.Name = "GlowParticle"
+GlowParticle.Texture = "rbxassetid://241923041"
+GlowParticle.Transparency = NumberSequence.new(0.9)
+GlowParticle.Brightness = 50
+GlowParticle.Color = ColorSequence.new(v1)
+GlowParticle.LightEmission = 0
+GlowParticle.LightInfluence = 0
+GlowParticle.Size = NumberSequence.new(2.87, 0)
+GlowParticle.Lifetime = NumberRange.new(0.3)
+GlowParticle.Rate = 35
+GlowParticle.Acceleration = Vector3.new(0, 0, 0)
+GlowParticle.Speed = NumberRange.new(0)
+GlowParticle.Enabled = false
+
+local LaserTrail = Instance.new("Trail")
+
+LaserTrail.Name = "LaserTrail"
+LaserTrail.Brightness = 10000
+LaserTrail.Color = ColorSequence.new(v1)
+LaserTrail.Lifetime = 0.01
+LaserTrail.MinLength = 0
+LaserTrail.WidthScale = NumberSequence.new(1, 1)
+LaserTrail.Enabled = true
+LaserTrail.FaceCamera = true
+LaserTrail.Transparency = NumberSequence.new(0)
+GlowParticle.Parent = Part
+
+local function OnLaserPartAdded(p1) --[[ OnLaserPartAdded | Line: 58 | Upvalues: Trove (copy), Part (copy), LaserBeam (copy), LaserTrail (copy), RunService (copy), Raycast2 (copy), BulletFactory (copy) ]]
+    local v1 = Trove.new()
+    local v2 = Part:Clone()
+    local v3 = LaserBeam:Clone()
+    local v4 = LaserTrail:Clone()
+
+    v4.Parent = v2
+
+    local Attachment = Instance.new("Attachment", p1)
+    local Attachment2 = Instance.new("Attachment", p1)
+
+    v3.Attachment0 = Attachment
+    v3.Attachment1 = Attachment2
+
+    local Attachment3 = Instance.new("Attachment", v2)
+    local Attachment4 = Instance.new("Attachment", v2)
+
+    v4.Attachment0 = Attachment3
+    v4.Attachment1 = Attachment4
+
+    local v5 = RunService.Stepped:Connect(function() --[[ Line: 74 | Upvalues: Raycast2 (ref), p1 (copy), BulletFactory (ref), v2 (copy), Attachment3 (copy), Attachment4 (copy), Attachment2 (copy) ]]
+        local v1 = Raycast2.Raycast(p1.CFrame.Position, p1.CFrame.LookVector * 1000, nil, BulletFactory.CanBulletPassThrough)
+        local v22 = Raycast2.Raycast(p1.CFrame.Position, p1.CFrame.LookVector * 1000, nil, BulletFactory.CanBulletPassThrough) and v1.Position or Vector3.new(0, 0, 0)
+        local Magnitude = (workspace.CurrentCamera.CFrame.Position - v22).Magnitude
+        local v4 = Vector3.new(0.2, 0.2, 0.2) * math.max(1, Magnitude / 100)
+
+        if Magnitude < 1 then
+            v2.GlowParticle.Enabled = true
+        else
+            v2.GlowParticle.Enabled = false
+        end
+
+        v2.CFrame = CFrame.new(v22, v1 and v1.Normal or Vector3.new(0, 0, 0))
+        v2.Size = v4
+        Attachment3.Position = Vector3.new(0, v4.Y / 2, 0)
+        Attachment4.Position = Vector3.new(0, -v4.Y / 2, 0)
+        Attachment2.WorldPosition = p1.CFrame.Position + p1.CFrame.LookVector * 2
+    end)
+
+    v2.Parent = p1
+    v3.Parent = p1
+    v1:Add(v5)
+    v1:AttachToInstance(p1)
+end
+
+function t.init() --[[ init | Line: 101 | Upvalues: LaserBeam (copy), OnLaserPartAdded (copy) ]]
+    workspace.DescendantAdded:Connect(function(p1) --[[ Line: 102 | Upvalues: LaserBeam (ref), OnLaserPartAdded (ref) ]]
+        if not p1:HasTag("Laser") or p1:FindFirstChild(LaserBeam.Name) then
+            return
+        end
+
+        OnLaserPartAdded(p1)
+    end)
+end
+
+return t
