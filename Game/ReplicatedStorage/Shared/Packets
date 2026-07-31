@@ -1,0 +1,185 @@
+-- Script Path: game:GetService("ReplicatedStorage").Shared.Packets
+-- Took 0.09s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local bytenet = require(game.ReplicatedStorage.Packages.bytenet)
+
+local function f1() --[[ Line: 4 | Upvalues: bytenet (copy) ]]
+    return bytenet.struct({
+        Head = bytenet.cframe,
+        Torso = bytenet.cframe,
+        LeftLeg = bytenet.cframe,
+        RightLeg = bytenet.cframe,
+        LeftArm = bytenet.cframe,
+        RightArm = bytenet.cframe,
+        LeftHoldingCFrame = bytenet.optional(bytenet.cframe),
+        RightHoldingCFrame = bytenet.optional(bytenet.cframe),
+        LeftHandActive = bytenet.optional(bytenet.bool),
+        RightHandActive = bytenet.optional(bytenet.bool)
+    })
+end
+
+return {
+    ToServer = bytenet.defineNamespace("toServerRemotes", function() --[[ Line: 20 | Upvalues: bytenet (copy), f1 (copy) ]]
+        return {
+            packets = {
+                purchaseBlueprint = bytenet.definePacket({
+                    value = bytenet.struct({
+                        itemCategory = bytenet.string,
+                        itemName = bytenet.string
+                    })
+                }),
+                throwHolding = bytenet.definePacket({
+                    value = bytenet.struct({
+                        throwFloat = bytenet.float32,
+                        lookVector = bytenet.vec3
+                    })
+                }),
+                joinTeam = bytenet.definePacket({
+                    value = bytenet.string
+                }),
+                bulletHit = bytenet.definePacket({
+                    value = bytenet.struct({
+                        origin = bytenet.vec3,
+                        direction = bytenet.vec3,
+                        gunEntityId = bytenet.string,
+                        clientClaimedSize = bytenet.vec3,
+                        bulletRaycast = bytenet.struct({
+                            Origin = bytenet.vec3,
+                            Result = bytenet.struct({
+                                Distance = bytenet.int32,
+                                Instance = bytenet.inst,
+                                Position = bytenet.vec3,
+                                Normal = bytenet.vec3
+                            })
+                        })
+                    })
+                }),
+                setLocaleId = bytenet.definePacket({
+                    value = bytenet.struct({
+                        systemLocaleId = bytenet.string
+                    })
+                }),
+                useInteractable = bytenet.definePacket({
+                    value = bytenet.string
+                }),
+                reqFirePlayer = bytenet.definePacket({
+                    value = bytenet.string
+                }),
+                reqVotekickPlayer = bytenet.definePacket({
+                    value = bytenet.string
+                }),
+                voteOnReferendum = bytenet.definePacket({
+                    value = bytenet.bool
+                }),
+                footStep = bytenet.definePacket({
+                    reliabilityType = "unreliable",
+                    value = bytenet.struct({
+                        materialName = bytenet.string,
+                        ratio = bytenet.float32
+                    })
+                }),
+                replicateCharacterTransform = bytenet.definePacket({
+                    reliabilityType = "unreliable",
+                    value = f1()
+                }),
+                requestServerInvite = bytenet.definePacket({
+                    reliabilityType = "unreliable",
+                    value = bytenet.nothing
+                }),
+                changeCustomization = bytenet.definePacket({
+                    reliabilityType = "unreliable",
+                    value = bytenet.struct({
+                        index = bytenet.string,
+                        newvalue = bytenet.int8,
+                        onteam = bytenet.optional(bytenet.int8)
+                    })
+                }),
+                writeNote = bytenet.definePacket({
+                    value = bytenet.struct({
+                        entityId = bytenet.string,
+                        text = bytenet.string
+                    })
+                })
+            },
+            queries = {
+                getServerList = bytenet.defineQuery({
+                    request = bytenet.nothing,
+                    response = bytenet.map(bytenet.string, bytenet.unknown)
+                }),
+                joinServer = bytenet.defineQuery({
+                    request = bytenet.struct({
+                        ServerID = bytenet.string,
+                        PasswordAttempt = bytenet.optional(bytenet.string)
+                    }),
+                    response = bytenet.string
+                }),
+                createReservedServer = bytenet.defineQuery({
+                    request = bytenet.struct({
+                        Name = bytenet.string,
+                        Password = bytenet.optional(bytenet.string)
+                    }),
+                    response = bytenet.string
+                }),
+                purchaseBlueprint = bytenet.defineQuery({
+                    request = bytenet.struct({
+                        itemCategory = bytenet.string,
+                        itemName = bytenet.string
+                    }),
+                    response = bytenet.bool
+                })
+            }
+        }
+    end),
+    ToClient = bytenet.defineNamespace("toClientRemotes", function() --[[ Line: 132 | Upvalues: bytenet (copy), f1 (copy) ]]
+        return {
+            packets = {
+                updateTimer = bytenet.definePacket({
+                    reliabilityType = "unreliable",
+                    value = bytenet.struct({
+                        label = bytenet.string,
+                        time = bytenet.int16
+                    })
+                }),
+                clientCache = bytenet.definePacket({
+                    value = bytenet.bool
+                }),
+                addMapPin = bytenet.definePacket({
+                    value = bytenet.struct({
+                        Location = bytenet.vec3,
+                        Color = bytenet.unknown,
+                        ShapeStyle = bytenet.optional(bytenet.string),
+                        Text = bytenet.optional(bytenet.string),
+                        Size = bytenet.optional(bytenet.int16),
+                        Rotation = bytenet.optional(bytenet.int16),
+                        Transparency = bytenet.optional(bytenet.float32)
+                    })
+                }),
+                clearMapPins = bytenet.definePacket({
+                    value = bytenet.bool
+                }),
+                replicateDiscount = bytenet.definePacket({
+                    value = bytenet.struct({
+                        newDiscount = bytenet.optional(bytenet.float32),
+                        path = bytenet.string
+                    })
+                }),
+                updateCharacterTransform = bytenet.definePacket({
+                    value = bytenet.struct({
+                        characterId = bytenet.string,
+                        transform = f1()
+                    })
+                }),
+                playMusic = bytenet.definePacket({
+                    value = bytenet.struct({
+                        audioPlayer = bytenet.inst,
+                        duration = bytenet.optional(bytenet.uint16),
+                        fadeOut = bytenet.optional(bytenet.uint16),
+                        dontInterrupt = bytenet.optional(bytenet.bool)
+                    })
+                })
+            }
+        }
+    end)
+}
