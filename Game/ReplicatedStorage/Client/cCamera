@@ -1,0 +1,262 @@
+-- Script Path: game:GetService("ReplicatedStorage").Client.cCamera
+-- Took 0.13s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local World = require(game.ReplicatedStorage.World)
+local t = {}
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CVars = require(ReplicatedStorage.Shared.CVars)
+local CurrentCamera = game.Workspace.CurrentCamera
+local v1 = World.loadModule("cGUI")
+local v2 = false
+local v3 = "firstperson"
+local gamestate = CVars.gamestate
+local v4 = true
+local v5 = nil
+local v6 = 1
+local v7 = 0
+local v8 = 0
+local v9 = 80
+
+local function getCamInputVector() --[[ getCamInputVector | Line: 32 | Upvalues: UserInputService (copy) ]]
+    local count = 0
+    local count2 = 0
+    local count3 = 0
+
+    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+        count = count + 1
+    end
+
+    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+        count = count - 1
+    end
+
+    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+        count2 = count2 - 1
+    end
+
+    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+        count2 = count2 + 1
+    end
+
+    if UserInputService:IsKeyDown(Enum.KeyCode.E) then
+        count3 = count3 + 1
+    end
+
+    if UserInputService:IsKeyDown(Enum.KeyCode.Q) then
+        count3 = count3 - 1
+    end
+
+    if count == 0 and (count2 == 0 and count3 == 0) then
+        return Vector3.new(0, 0, 0)
+    end
+
+    return Vector3.new(count2, count3, count).Unit
+end
+
+local function updateCamFOV(p1) --[[ updateCamFOV | Line: 63 | Upvalues: v3 (ref), TweenService (copy), CurrentCamera (copy), v9 (ref) ]]
+    if v3 == "firstperson" then
+        return
+    end
+
+    TweenService:Create(CurrentCamera, TweenInfo.new(0.3), {
+        FieldOfView = v9
+    }):Play()
+end
+
+local function updateFreecam(p1) --[[ updateFreecam | Line: 69 | Upvalues: CurrentCamera (copy), v3 (ref), getCamInputVector (copy), UserInputService (copy), v9 (ref), v7 (ref), v8 (ref), TweenService (copy) ]]
+    CurrentCamera.CameraType = Enum.CameraType.Scriptable
+    v3 = "freecam"
+
+    local v1 = CurrentCamera.CFrame
+    local LookVector = v1.LookVector
+    local RightVector = v1.RightVector
+    local v2 = RightVector:Cross(LookVector)
+    local v32 = getCamInputVector()
+    local v4 = Vector3.new(0, 0, 0)
+    local v5 = if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then 2000 else 1000
+
+    if v32.Magnitude > 0 then
+        v4 = (RightVector * v32.X + LookVector * v32.Z + v2 * v32.Y) * p1 * v5
+    end
+
+    local v6 = v9 / 80
+    local v72 = UserInputService:GetMouseDelta() * v6
+
+    v7 = v7 - v72.Y
+    v8 = v8 - v72.X
+    v7 = math.clamp(v7, -90, 90)
+
+    local v11 = CFrame.new(v1.Position + v4) * CFrame.Angles(0, math.rad(v8), 0) * CFrame.Angles(math.rad(v7), 0, 0)
+
+    TweenService:Create(CurrentCamera, TweenInfo.new(0.3 / v6), {
+        CFrame = v11
+    }):Play()
+end
+
+function UpdateCamera(p1) --[[ UpdateCamera | Line: 99 | Upvalues: v2 (ref), World (copy), v3 (ref), v5 (ref), v4 (ref), CurrentCamera (copy), v1 (copy), gamestate (copy), updateFreecam (copy), updateCamFOV (copy) ]]
+    if v2 then
+        return
+    end
+
+    if World.get(World.LocalEntityId) and World.get(World.LocalEntityId).Player.CharacterControlling then
+        local Character = game:GetService("Players").LocalPlayer.Character
+
+        v3 = "firstperson"
+        v5 = Character
+        v4 = workspace:GetAttribute("PrivateServerOwnerId")
+    end
+
+    if v5 and (v5.Parent ~= nil and v3 ~= "freecam") then
+        if v5 ~= game:GetService("Players").LocalPlayer.Character and v3 == "firstperson" then
+            v3 = "thirdperson"
+        end
+
+        if v3 == "firstperson" then
+            CurrentCamera.CameraType = Enum.CameraType.Scriptable
+            CurrentCamera.CFrame = v5.Head.CFrame * CFrame.new(Vector3.new(0, 0.25, 0))
+        else
+            CurrentCamera.CameraType = Enum.CameraType.Follow
+            CurrentCamera.CameraSubject = v5.Head
+            v1.UpdateSpectatingTarget(v5.Name)
+        end
+    elseif v3 == "freecam" or v4 then
+        if not gamestate:equals("Intermission") then
+            updateFreecam(p1)
+            v1.UpdateSpectatingTarget("")
+        end
+    else
+        incrementSpectatorIndex(true)
+    end
+
+    updateCamFOV(p1)
+end
+function incrementSpectatorIndex(p1, p2) --[[ incrementSpectatorIndex | Line: 131 | Upvalues: v6 (ref), World (copy), v4 (ref), v3 (ref), v5 (ref) ]]
+    v6 = v6 + (if p1 then 1 else -1)
+
+    local v32 = World.GetEntitiesWithComponent("Character")
+    local count = 0
+
+    for v42, v52 in v32 do
+        count = count + 1
+    end
+
+    if count < v6 then
+        v6 = 1
+    elseif v6 <= 0 then
+        v6 = count
+    end
+
+    if p2 and v6 == p2 then
+        print("No remaining spectatable characters found")
+        v4 = true
+        v3 = "freecam"
+
+        return false
+    end
+
+    local count2 = 1
+
+    for v62, v7 in v32 do
+        if count2 == v6 then
+            local v8 = World.get(World.LocalEntityId)
+            local v9 = if v8 then v8.Player and v8.Player.Team else v8
+
+            if (v7.DamageRig and v7.DamageRig.Dead or (if v9 then v7.Character and (v7.Character.Team and (if v7.Character.Team == v9 then false else true)) else v9)) and not v4 then
+                return incrementSpectatorIndex(p1, if p2 then p2 else v6)
+            end
+
+            v5 = v7.Character.Instance
+
+            return true
+        end
+
+        count2 = count2 + 1
+    end
+
+    return true
+end
+
+local v10 = false
+
+function Input(p1, p2) --[[ Input | Line: 174 | Upvalues: v10 (ref), RunService (copy), v2 (ref), World (copy), v3 (ref), v4 (ref), v9 (ref) ]]
+    if p2 or v10 then
+        return
+    end
+
+    local KeyCode = p1.KeyCode
+
+    if KeyCode == Enum.KeyCode.P and RunService:IsStudio() then
+        v2 = not v2
+    end
+
+    local v1 = World.get(World.LocalEntityId)
+
+    if v1 and v1.Player.CharacterControlling then
+        return
+    end
+
+    v10 = true
+
+    if KeyCode == Enum.KeyCode.Up then
+        incrementSpectatorIndex(true)
+    elseif KeyCode == Enum.KeyCode.Down then
+        incrementSpectatorIndex(false)
+    else
+        if KeyCode == Enum.KeyCode.M then
+            v10 = false
+
+            return
+        end
+
+        if KeyCode == Enum.KeyCode.Space then
+            v3 = if v3 == "firstperson" then "thirdperson" elseif v3 == "thirdperson" and v4 then "freecam" else "firstperson"
+        elseif p1.UserInputType == Enum.UserInputType.MouseButton1 then
+            incrementSpectatorIndex(true)
+        elseif p1.UserInputType == Enum.UserInputType.MouseButton2 then
+            incrementSpectatorIndex(false)
+        else
+            if p1.UserInputType ~= Enum.UserInputType.MouseWheel then
+                v10 = false
+
+                return
+            end
+
+            v9 = v9 - 2 * p1.Position.Z
+            v9 = math.clamp(v9, 1, 120)
+        end
+    end
+
+    v10 = false
+end
+function t.init() --[[ init | Line: 217 | Upvalues: UserInputService (copy), World (copy), v4 (ref), v3 (ref), gamestate (copy), CurrentCamera (copy) ]]
+    game:GetService("RunService"):BindToRenderStep("CharacterCamera2", Enum.RenderPriority.Camera.Value - 1, UpdateCamera)
+    game:GetService("RunService").Stepped:Connect(function() --[[ Line: 219 | Upvalues: UserInputService (ref) ]]
+        UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+        UserInputService.MouseIcon = "rbxassetid://15262085964"
+    end)
+    UserInputService.InputBegan:Connect(Input)
+    UserInputService.InputChanged:Connect(Input)
+    World.changed("Player", function(p1, p2, p3) --[[ Line: 225 | Upvalues: World (ref), v4 (ref), v3 (ref) ]]
+        if p1 ~= World.LocalEntityId or not p2.Team then
+            return
+        end
+
+        v4 = false
+        v3 = "thirdperson"
+        incrementSpectatorIndex(true)
+    end)
+    gamestate.changed:Connect(function(p1, p2) --[[ Line: 234 | Upvalues: CurrentCamera (ref) ]]
+        if p1 ~= "Intermission" then
+            return
+        end
+
+        CurrentCamera.CFrame = CFrame.new(Vector3.new(0, 100, 0))
+    end)
+end
+
+return t
