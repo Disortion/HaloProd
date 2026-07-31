@@ -1,0 +1,27 @@
+-- Script Path: game:GetService("ReplicatedStorage").Client.cInteractableCache
+-- Took 0.07s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local t = {}
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Interactable = require(ReplicatedStorage.Components.Interactable)
+local World = require(ReplicatedStorage.World)
+
+function t.init() --[[ init | Line: 11 | Upvalues: World (copy), Interactable (copy) ]]
+    World.changed("Interactable", function(p1, p2, p3) --[[ Line: 12 | Upvalues: Interactable (ref), World (ref) ]]
+        if p2.InteractionType then
+            Interactable.Spawn(p1, World.get(p1))
+
+            return
+        end
+
+        if not next(p3) then
+            return
+        end
+
+        Interactable.Destroy(p1, World.get(p1))
+    end)
+end
+
+return t
