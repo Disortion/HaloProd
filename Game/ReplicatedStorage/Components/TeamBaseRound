@@ -1,0 +1,10 @@
+-- Script Path: game:GetService("ReplicatedStorage").Components.TeamBaseRound
+-- Took 0.06s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+return setmetatable({}, {
+    __call = function(p1, p2) --[[ __call | Line: 12 ]]
+        return p2
+    end
+})
