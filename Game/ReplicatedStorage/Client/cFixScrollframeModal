@@ -1,0 +1,81 @@
+-- Script Path: game:GetService("ReplicatedStorage").Client.cFixScrollframeModal
+-- Took 0.08s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local t = {}
+
+local function setInitialModalAttributes(p1) --[[ setInitialModalAttributes | Line: 9 ]]
+    for v1, v2 in p1:GetDescendants() do
+        if v2:IsA("GuiButton") and v2:GetAttribute("ModalFixDefault") == nil then
+            v2:SetAttribute("ModalFixDefault", v2.Modal)
+        end
+    end
+end
+
+local function isFullyVisible(p1) --[[ isFullyVisible | Line: 20 ]]
+    while p1 do
+        if p1:IsA("GuiObject") and not p1.Visible then
+            return false
+        end
+
+        p1 = p1.Parent
+    end
+
+    return true
+end
+
+local function toggleModals(p1) --[[ toggleModals | Line: 32 | Upvalues: isFullyVisible (copy) ]]
+    local v1 = isFullyVisible(p1)
+
+    for v2, v3 in p1:GetDescendants() do
+        if v3 and v3:IsA("GuiButton") then
+            v3.Modal = v1 and v3:GetAttribute("ModalFixDefault") or false
+        end
+    end
+end
+
+local function initializeScrollingFrame(p1) --[[ initializeScrollingFrame | Line: 42 | Upvalues: setInitialModalAttributes (copy), toggleModals (copy) ]]
+    if not (p1 and p1:IsA("ScrollingFrame")) then
+        return
+    end
+
+    setInitialModalAttributes(p1)
+    p1:GetPropertyChangedSignal("Visible"):Connect(function() --[[ Line: 51 | Upvalues: toggleModals (ref), p1 (copy) ]]
+        toggleModals(p1)
+    end)
+
+    local v1 = p1.Parent
+
+    while v1 do
+        if v1:IsA("GuiObject") then
+            v1:GetPropertyChangedSignal("Visible"):Connect(function() --[[ Line: 59 | Upvalues: toggleModals (ref), p1 (copy) ]]
+                toggleModals(p1)
+            end)
+        end
+
+        v1 = v1.Parent
+    end
+
+    toggleModals(p1)
+end
+
+function t.init() --[[ init | Line: 69 | Upvalues: initializeScrollingFrame (copy) ]]
+    local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
+
+    for v1, v2 in PlayerGui:GetDescendants() do
+        if v2:IsA("ScrollingFrame") then
+            initializeScrollingFrame(v2)
+        end
+    end
+
+    PlayerGui.DescendantAdded:Connect(function(p1) --[[ Line: 77 | Upvalues: initializeScrollingFrame (ref) ]]
+        if not p1:IsA("ScrollingFrame") then
+            return
+        end
+
+        initializeScrollingFrame(p1)
+    end)
+end
+
+return t
