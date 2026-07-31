@@ -1,0 +1,50 @@
+-- Script Path: game:GetService("ReplicatedStorage").Components.Player
+-- Took 0.07s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local t = {}
+local t2 = {}
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+game:GetService("RunService")
+game:GetService("ServerScriptService")
+
+local World = require(ReplicatedStorage.World)
+
+require(ReplicatedStorage.Components.Character)
+
+local CVars = require(ReplicatedStorage.Shared.CVars)
+
+function t.__call(p1, p2) --[[ __call | Line: 28 | Upvalues: CVars (copy) ]]
+    local t = {
+        CharacterControlling = nil,
+        Team = nil,
+        Heat = 0,
+        DeathTax = false
+    }
+
+    t.UserId = p2 and p2.UserId or -1
+    t.Instance = p2
+    t.Cash = CVars.sv_startercash:get()
+    t.JoinedTick = tick()
+
+    return t
+end
+function t2.GetCharacterEntity(p1) --[[ GetCharacterEntity | Line: 42 | Upvalues: World (copy) ]]
+    local CharacterControlling = World.get(p1).Player.CharacterControlling
+    local v1 = World.get(CharacterControlling)
+
+    return if v1 then v1.Character else v1
+end
+function t2.GetPlayerFromCharacter(p1) --[[ GetPlayerFromCharacter | Line: 48 | Upvalues: World (copy) ]]
+    for v1, v2 in World.GetEntitiesWithComponent("Player") do
+        if v2.Player.CharacterControlling == p1 then
+            return v1, v2
+        end
+    end
+
+    return nil
+end
+
+return setmetatable(t2, t)
