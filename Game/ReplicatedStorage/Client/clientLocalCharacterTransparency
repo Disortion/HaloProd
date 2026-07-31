@@ -1,0 +1,46 @@
+-- Script Path: game:GetService("ReplicatedStorage").Client.clientLocalCharacterTransparency
+-- Took 0.08s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local t = {}
+
+local function OnChildAdded(p1, p2) --[[ OnChildAdded | Line: 3 ]]
+    if p1:IsA("BasePart") then
+        p1.LocalTransparencyModifier = 0
+    end
+
+    if not p1:IsA("Accessory") then
+        return
+    end
+
+    local Handle = p1:WaitForChild("Handle")
+
+    if not (Handle:FindFirstChild("HatAttachment") or Handle:FindFirstChild("HairAttachment") or Handle:FindFirstChild("FaceFrontAttachment")) then
+        return
+    end
+
+    for v2, v3 in p1:GetDescendants() do
+        if v3:IsA("BasePart") and not v3:FindFirstChildOfClass("MeshPart") then
+            v3.Transparency = if p2 <= 1 then 1 else 0
+        end
+    end
+end
+
+function t.init() --[[ init | Line: 21 | Upvalues: OnChildAdded (copy) ]]
+    local LocalPlayer = game.Players.LocalPlayer
+
+    game:GetService("RunService").Stepped:Connect(function(p1) --[[ Line: 23 | Upvalues: LocalPlayer (copy), OnChildAdded (ref) ]]
+        if not (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")) then
+            return
+        end
+
+        local Magnitude = (workspace.CurrentCamera.CFrame.Position - LocalPlayer.Character:WaitForChild("Head").Position).Magnitude
+
+        for v1, v2 in LocalPlayer.Character:GetChildren() do
+            OnChildAdded(v2, Magnitude)
+        end
+    end)
+end
+
+return t
