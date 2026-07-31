@@ -1,0 +1,167 @@
+-- Script Path: game:GetService("ReplicatedStorage").Shared.Spring
+-- Took 0.09s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local t = {}
+local t2 = {}
+
+local function limPrint(p1, ...) --[[ limPrint | Line: 7 | Upvalues: t2 (copy) ]]
+    local v1 = t2[p1] or 0
+
+    if not (v1 < 5) then
+        return
+    end
+
+    print(...)
+    t2[p1] = v1 + 1
+end
+
+function t.new(p1, p2) --[[ new | Line: 17 ]]
+    local v1 = p1 or Vector3.new(0, 0, 0)
+
+    return {
+        _damper = 1,
+        _speed = 1,
+        _time0 = tick(),
+        _position0 = v1,
+        _velocity0 = 0.1 * v1,
+        _target = v1,
+        _length = p2 or (1 / 0)
+    }
+end
+function t.Impulse(p1, p2) --[[ Impulse | Line: 32 | Upvalues: t (copy) ]]
+    t.Set(p1, "Velocity", t.Get(p1, "Velocity") + p2)
+end
+function t.TimeSkip(p1, p2) --[[ TimeSkip | Line: 38 | Upvalues: t (copy) ]]
+    local v1 = tick()
+    local v2, v3 = t._positionVelocity(p1, v1 + p2)
+
+    p1._position0 = v2
+    p1._velocity0 = v3
+    p1._time0 = v1
+end
+function t.Get(p1, p2) --[[ Get | Line: 46 | Upvalues: t (copy) ]]
+    if t[p2] then
+        return t[p2]
+    end
+
+    if p2 == "Value" or (p2 == "Position" or p2 == "p") then
+        local v1, _ = t._positionVelocity(p1, tick())
+
+        return v1
+    end
+
+    if p2 == "Velocity" or p2 == "v" then
+        local _, v2 = t._positionVelocity(p1, tick())
+
+        return v2
+    end
+
+    if p2 == "Target" or p2 == "t" then
+        return p1._target
+    end
+
+    if p2 == "Damper" or p2 == "d" then
+        return p1._damper
+    end
+
+    if p2 == "Speed" or p2 == "s" then
+        return p1._speed
+    end
+
+    if p2 == "Length" or p2 == "l" then
+        return p1._length
+    end
+end
+function t.Set(p1, p2, p3) --[[ Set | Line: 66 | Upvalues: t (copy) ]]
+    local v1 = tick()
+
+    if p2 == "Value" or (p2 == "Position" or p2 == "p") then
+        local _, v2 = t._positionVelocity(p1, v1)
+
+        p1._position0 = p3
+        p1._velocity0 = v2
+    elseif p2 == "Velocity" or p2 == "v" then
+        local v3, _ = t._positionVelocity(p1, v1)
+
+        p1._position0 = v3
+        p1._velocity0 = p3
+    elseif p2 == "Target" or p2 == "t" then
+        local v4, v5 = t._positionVelocity(p1, v1)
+
+        p1._position0 = v4
+        p1._velocity0 = v5
+        p1._target = p3
+    elseif p2 == "Damper" or p2 == "d" then
+        local v6, v7 = t._positionVelocity(p1, v1)
+
+        p1._position0 = v6
+        p1._velocity0 = v7
+        p1._damper = math.clamp(p3, 0, 1)
+    elseif p2 == "Speed" or p2 == "s" then
+        local v8, v9 = t._positionVelocity(p1, v1)
+
+        p1._position0 = v8
+        p1._velocity0 = v9
+        p1._speed = if p3 < 0 then 0 else p3
+    elseif p2 == "Length" or p2 == "l" then
+        p1._length = p3
+    else
+        error(("%q is not a valid member of Spring"):format((tostring(p2))), 2)
+    end
+
+    p1._time0 = v1
+end
+function t._positionVelocity(p1, p2) --[[ _positionVelocity | Line: 100 ]]
+    local _position0 = p1._position0
+    local _velocity0 = p1._velocity0
+    local _target = p1._target
+    local _damper = p1._damper
+    local _speed = p1._speed
+    local _length = p1._length
+    local v2 = math.abs(_speed * (p2 - p1._time0))
+    local v3 = _damper * _damper
+    local v4, v5, v6
+
+    if v3 < 1 then
+        local v7 = math.sqrt(1 - v3)
+        local v8 = math.exp(-_damper * v2) / v7
+
+        v4 = v8 * math.cos(v7 * v2)
+        v5 = v8 * math.sin(v7 * v2)
+        v6 = v7
+    elseif v3 == 1 then
+        v6 = 1
+
+        local v9 = math.exp(-_damper * v2) / v6
+
+        v4 = v9
+        v5 = v9 * v2
+    else
+        local v10 = math.sqrt(v3 - 1)
+        local v11 = math.exp((-_damper + v10) * v2) / (2 * v10)
+        local v12 = math.exp((-_damper - v10) * v2) / (2 * v10)
+
+        v4 = v11 + v12
+        v6 = v10
+        v5 = v11 - v12
+    end
+
+    if not (_position0 and (_velocity0 and (_target and (_damper and (_speed and (v2 and (v6 and (v5 and v4)))))))) then
+        warn("Invalid calculation parameters", _position0, _velocity0, _target, _damper, _speed, v2, v6, v5, v4)
+    end
+
+    if v2 == v2 and (v3 == v3 and (v6 == v6 and (v5 == v5 and v4 == v4))) then
+        local v13 = (v6 * v4 + _damper * v5) * _position0 + (1 - (v6 * v4 + _damper * v5)) * _target + v5 / _speed * _velocity0
+        local Magnitude = (v13 - _target).Magnitude
+
+        return v13, -_speed * v5 * _position0 + _speed * v5 * _target + (v6 * v4 - _damper * v5) * _velocity0
+    end
+
+    warn("NaN detected", v2, v3, v6, v5, v4)
+
+    return Vector3.new(0, 0, 0), Vector3.new(0, 0, 0)
+end
+
+return t
