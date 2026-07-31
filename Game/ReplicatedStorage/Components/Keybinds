@@ -1,0 +1,22 @@
+-- Script Path: game:GetService("ReplicatedStorage").Components.Keybinds
+-- Took 0.06s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+return setmetatable({}, {
+    __call = function(p1, p2) --[[ __call | Line: 5 ]]
+        return {
+            LOAD_HOLDING = Enum.KeyCode.R,
+            SWAP_HANDS = Enum.KeyCode.F,
+            DROP_ITEM = Enum.KeyCode.G,
+            CROUCH = Enum.KeyCode.C,
+            STAND_UP = Enum.KeyCode.LeftControl,
+            LEAN_LEFT = Enum.KeyCode.Q,
+            LEAN_RIGHT = Enum.KeyCode.E,
+            OPEN_MAP = Enum.KeyCode.M,
+            SPACE = Enum.KeyCode.Space,
+            USE_BOTH_HANDS = Enum.KeyCode.LeftAlt,
+            DISPLAY_NAMES = Enum.KeyCode.H
+        }
+    end
+})
