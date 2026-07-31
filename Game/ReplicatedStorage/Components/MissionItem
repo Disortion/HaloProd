@@ -1,0 +1,24 @@
+-- Script Path: game:GetService("ReplicatedStorage").Components.MissionItem
+-- Took 0.06s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local t = {}
+
+require(game.ReplicatedStorage.World)
+function t.__call(p1, p2) --[[ __call | Line: 19 ]]
+    local t = {
+        AssociatedMission = p2.AssociatedMission,
+        CleanupOnEnd = p2.CleanupOnEnd or true,
+        Core = p2.Core or false
+    }
+
+    t.BonusRewards = p2.BonusRewards or { 0, 0, 0 }
+    t.GiftReward = p2.GiftReward or nil
+    t.OriginTeam = p2.OriginTeam or nil
+    t.MustBeInGarage = p2.MustBeInGarage or nil
+
+    return t
+end
+
+return setmetatable({}, t)
