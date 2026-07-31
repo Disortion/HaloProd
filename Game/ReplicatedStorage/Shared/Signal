@@ -1,0 +1,91 @@
+-- Script Path: game:GetService("ReplicatedStorage").Shared.Signal
+-- Took 0.07s to decompile.
+-- Executor: Velocity (1.3.6)
+
+-- https://lua.expert/
+local HttpService = game:GetService("HttpService")
+local t = {}
+
+t.__index = t
+t.ClassName = "Signal"
+function t.isSignal(p1) --[[ isSignal | Line: 54 | Upvalues: t (copy) ]]
+    return if type(p1) == "table" then getmetatable(p1) == t else false
+end
+function t.new() --[[ new | Line: 63 | Upvalues: t (copy) ]]
+    local v2 = setmetatable({}, t)
+
+    v2._bindableEvent = Instance.new("BindableEvent")
+    v2._argMap = {}
+    v2._source = ""
+    v2._bindableEvent.Event:Connect(function(p1) --[[ Line: 73 | Upvalues: v2 (copy) ]]
+        v2._argMap[p1] = nil
+
+        if v2._bindableEvent or next(v2._argMap) then
+            return
+        end
+
+        v2._argMap = nil
+    end)
+
+    return v2
+end
+function t.Fire(p1, ...) --[[ Fire | Line: 91 | Upvalues: HttpService (copy) ]]
+    if p1._bindableEvent then
+        local v1 = table.pack(...)
+        local v2 = HttpService:GenerateGUID(false)
+
+        p1._argMap[v2] = v1
+        p1._bindableEvent:Fire(v2)
+    else
+        warn(("Signal is already destroyed. %s"):format(p1._source))
+    end
+end
+function t.Connect(p1, p2) --[[ Connect | Line: 111 ]]
+    if type(p2) ~= "function" then
+        error(("connect(%s)"):format((typeof(p2))), 2)
+    end
+
+    return p1._bindableEvent.Event:Connect(function(p12) --[[ Line: 116 | Upvalues: p1 (copy), p2 (copy) ]]
+        local v1 = p1._argMap[p12]
+
+        if v1 then
+            p2(table.unpack(v1, 1, v1.n))
+        else
+            error("Missing arg data, probably due to reentrance.")
+        end
+    end)
+end
+function t.Once(p1, p2) --[[ Once | Line: 134 ]]
+    if type(p2) ~= "function" then
+        error(("once(%s)"):format((typeof(p2))), 2)
+    end
+
+    return p1._bindableEvent.Event:Once(function(p12) --[[ Line: 139 | Upvalues: p1 (copy), p2 (copy) ]]
+        local v1 = p1._argMap[p12]
+
+        if v1 then
+            p2(table.unpack(v1, 1, v1.n))
+        else
+            error("Missing arg data, probably due to reentrance.")
+        end
+    end)
+end
+function t.Wait(p1) --[[ Wait | Line: 154 ]]
+    local v2 = p1._argMap[p1._bindableEvent.Event:Wait()]
+
+    if v2 then
+        return table.unpack(v2, 1, v2.n)
+    end
+
+    error("Missing arg data, probably due to reentrance.")
+end
+function t.Destroy(p1) --[[ Destroy | Line: 169 ]]
+    if p1._bindableEvent then
+        p1._bindableEvent:Destroy()
+        p1._bindableEvent = nil
+    end
+
+    setmetatable(p1, nil)
+end
+
+return t
