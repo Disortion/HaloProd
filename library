@@ -4209,26 +4209,40 @@ do
 			return Button
 		end
 
-		Library.Sections.Slider = function(self, Data)
-			Data = Data or {}
+        Library.Sections.Slider = function(self, Data)
+            Data = Data or {}
+            local minVal = Data.Min or Data.min or 0
+            local maxVal = Data.Max or Data.max or 100
+            local range = maxVal - minVal
+            local decimals = Data.Decimals or Data.decimals
 
-			local Slider = {
-				Window = self.Window,
-				Page = self.Page,
-				Section = self,
+            if not decimals then
+                if range <= 1 then
+                    decimals = 0.01
+                elseif range <= 10 then
+                    decimals = 0.1
+                else
+                    decimals = 1
+                end
+            end
 
-				Name = Data.Name or Data.name or "Slider",
-				Flag = Data.Flag or Data.flag or Library:NextFlag(),
-				Min = Data.Min or Data.min or 0,
-        Decimals = Data.Decimals or Data.decimals or 0.01,
-				Suffix = Data.Suffix or Data.suffix or "",
-				Max = Data.Max or Data.max or 100,
-				Default = Data.Default or Data.Default or 0,
-				Callback = Data.Callback or Data.callback or function() end,
+            local Slider = {
+                Window = self.Window,
+                Page = self.Page,
+                Section = self,
 
-				Value = 0,
-				Sliding = false,
-			}
+                Name = Data.Name or Data.name or "Slider",
+                Flag = Data.Flag or Data.flag or Library:NextFlag(),
+                Min = minVal,
+                Decimals = decimals,
+                Suffix = Data.Suffix or Data.suffix or "",
+                Max = maxVal,
+                Default = Data.Default or Data.Default or 0,
+                Callback = Data.Callback or Data.callback or function() end,
+
+                Value = 0,
+                Sliding = false,
+            }
 
 			local Items = {}
 			do
