@@ -2457,20 +2457,18 @@ local Library do
     
                 local SettingsItems = { }
                 do
-                    SettingsItems["Settings"] = Instances:Create("TextButton", {
-                        Parent = Library.UnusedHolder.Instance,
-                        Text = "",
-                        AutoButtonColor = false,
-                        Name = "\0",
-                        BorderColor3 = FromRGB(0, 0, 0),
-                        AnchorPoint = Vector2New(0.5, 0.5),
-                        BorderSizePixel = 0,
-                        Position = UDim2New(0.8949604630470276, 0, 0.2945185601711273, 0),
-                        Size = UDim2New(0, 325, 0, 159),
-                        ZIndex = 2,
-                        AutomaticSize = Enum.AutomaticSize.Y,
-                        BackgroundColor3 = FromRGB(21, 21, 24)
-                    }) SettingsItems["Settings"]:AddToTheme({BackgroundColor3 = "Background"})
+                SettingsItems["Settings"] = Instances:Create("Frame", {
+                    Parent = Library.UnusedHolder.Instance,
+                    Name = "\0",
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    AnchorPoint = Vector2New(0.5, 0.5),
+                    BorderSizePixel = 0,
+                    Position = UDim2New(0.8949604630470276, 0, 0.2945185601711273, 0),
+                    Size = UDim2New(0, 325, 0, 159),
+                    ZIndex = 2,
+                    AutomaticSize = Enum.AutomaticSize.Y,
+                    BackgroundColor3 = FromRGB(21, 21, 24)
+                }) SettingsItems["Settings"]:AddToTheme({BackgroundColor3 = "Background"})
                     
                     Instances:Create("UICorner", {
                         Parent = SettingsItems["Settings"].Instance,
@@ -2478,22 +2476,22 @@ local Library do
                         CornerRadius = UDimNew(0, 6)
                     })
                     
-                    SettingsItems["CloseButton"] = Instances:Create("TextButton", {
-                        Parent = SettingsItems["Settings"].Instance,
-                        Name = "\0",
-                        FontFace = Library.Font,
-                        TextColor3 = FromRGB(0, 0, 0),
-                        BorderColor3 = FromRGB(0, 0, 0),
-                        Text = "",
-                        AutoButtonColor = false,
-                        AnchorPoint = Vector2New(0, 1),
-                        BorderSizePixel = 0,
-                        Position = UDim2New(0, 8, 1, -8),
-                        Size = UDim2New(1, -16, 0, 22),
-                        ZIndex = 2,
-                        TextSize = 14,
-                        BackgroundColor3 = FromRGB(27, 26, 29)
-                    }) SettingsItems["CloseButton"]:AddToTheme({BackgroundColor3 = "Element"})
+                SettingsItems["CloseButton"] = Instances:Create("TextButton", {
+                    Parent = SettingsItems["Settings"].Instance,
+                    Name = "\0",
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(0, 0, 0),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Text = "",
+                    AutoButtonColor = false,
+                    AnchorPoint = Vector2New(0, 1),
+                    BorderSizePixel = 0,
+                    Position = UDim2New(0, 8, 1, -8),
+                    Size = UDim2New(1, -16, 0, 22),
+                    ZIndex = 10,
+                    TextSize = 14,
+                    BackgroundColor3 = FromRGB(27, 26, 29)
+                }) SettingsItems["CloseButton"]:AddToTheme({BackgroundColor3 = "Element"})
                 
                     Instances:Create("UICorner", {
                         Parent = SettingsItems["CloseButton"].Instance,
@@ -2515,7 +2513,7 @@ local Library do
                         BackgroundTransparency = 1,
                         Position = UDim2New(0.5, 0, 0.5, 0),
                         BorderColor3 = FromRGB(0, 0, 0),
-                        ZIndex = 2,
+                        ZIndex = 11,
                         TextSize = 14,
                         BackgroundColor3 = FromRGB(255, 255, 255)
                     })  SettingsItems["Text"]:AddToTheme({TextColor3 = "Dark Text"})
@@ -2530,20 +2528,21 @@ local Library do
                         SettingsItems["Text"]:Tween(nil, {TextColor3 = Library.Theme["Dark Text"]})
                     end)
 
-                    SettingsItems["Content"] = Instances:Create("ScrollingFrame", {
-                        Parent = SettingsItems["Settings"].Instance,
-                        Name = "\0",
-                        AutomaticCanvasSize = Enum.AutomaticSize.Y,
-                        Selectable = false,
-                        Size = UDim2New(1, -8, 1, -46),
-                        Position = UDim2New(0, 4, 0, 4),
-                        ScrollBarThickness = 0,
-                        BackgroundColor3 = FromRGB(255, 255, 255),
-                        BackgroundTransparency = 1,
-                        BorderColor3 = FromRGB(0, 0, 0),
-                        BorderSizePixel = 0,
-                        CanvasSize = UDim2New(0, 0, 0, 0)
-                    })
+                SettingsItems["Content"] = Instances:Create("ScrollingFrame", {
+                    Parent = SettingsItems["Settings"].Instance,
+                    Name = "\0",
+                    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                    Selectable = false,
+                    Size = UDim2New(1, -8, 1, -46),
+                    Position = UDim2New(0, 4, 0, 4),
+                    ScrollBarThickness = 0,
+                    BackgroundColor3 = FromRGB(255, 255, 255),
+                    BackgroundTransparency = 1,
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    BorderSizePixel = 0,
+                    CanvasSize = UDim2New(0, 0, 0, 0),
+                    ZIndex = 3
+                })
                     
                     Instances:Create("UIListLayout", {
                         Parent = SettingsItems["Content"].Instance,
@@ -2570,30 +2569,50 @@ local Library do
                     local RenderStepped 
                     local Debounce = false
     
-                    function Settings:SetOpen(Bool)
-                        if Debounce then 
-                            return
-                        end
-        
-                        Settings.IsOpen = Bool
-        
-                        Debounce = true 
-        
-                        if Settings.IsOpen then 
-                            for Index, Value in Settings.Elements do
-                                Value:RefreshPosition(true)
-                                task.wait(0.03)
-                            end
-    
-                            SettingsItems["Settings"].Instance.Visible = true
-                            SettingsItems["Settings"].Instance.Parent = Library.Holder.Instance
+            function Settings:SetOpen(Bool)
+                if Debounce then 
+                    return
+                end
 
-                            SettingsItems["Settings"].Instance.Position = UDim2New(
-                                0, Items["SettingsIcon"].Instance.AbsolutePosition.X + 18, 
-                                0, 
-                                Items["SettingsIcon"].Instance.AbsolutePosition.Y + Items["SettingsIcon"].Instance.AbsoluteSize.Y * 3 -- its weird
-                            )
-                            SettingsItems["Settings"]:Tween(nil, {Size = UDim2New(0, 325, 0, 185)})
+                Settings.IsOpen = Bool
+
+                Debounce = true 
+
+                if Settings.IsOpen then 
+                    for Index, Value in Settings.Elements do
+                        Value:RefreshPosition(true)
+                        task.wait(0.03)
+                    end
+
+                    SettingsItems["Settings"].Instance.Visible = true
+                    SettingsItems["Settings"].Instance.Parent = Library.Holder.Instance
+
+                    SettingsItems["Settings"].Instance.Position = UDim2New(
+                        0, Items["SettingsIcon"].Instance.AbsolutePosition.X + 18, 
+                        0, 
+                        Items["SettingsIcon"].Instance.AbsolutePosition.Y + Items["SettingsIcon"].Instance.AbsoluteSize.Y + 5
+                    )
+                    SettingsItems["Settings"]:Tween(nil, {Size = UDim2New(0, 325, 0, 185)})
+
+                    for Index, Value in Library.OpenFrames do 
+                        if Value ~= Settings then 
+                            Value:SetOpen(false)
+                        end
+                    end
+
+                    Library.OpenFrames[Settings] = Settings 
+                else
+                    if Library.OpenFrames[Settings] then 
+                        Library.OpenFrames[Settings] = nil
+                    end
+
+                    if RenderStepped then 
+                        RenderStepped:Disconnect()
+                        RenderStepped = nil
+                    end
+
+                    SettingsItems["Settings"]:Tween(nil, {Size = UDim2New(0, 325, 0, 0)})
+                end
         
                             for Index, Value in Library.OpenFrames do 
                                 if Value ~= Settings then 
@@ -2647,9 +2666,8 @@ local Library do
                                     SettingsItems["Settings"].Instance.Position = UDim2New(
                                         0, Items["SettingsIcon"].Instance.AbsolutePosition.X + 18, 
                                         0, 
-                                        Items["SettingsIcon"].Instance.AbsolutePosition.Y + Items["SettingsIcon"].Instance.AbsoluteSize.Y * 3 -- its weird
+                                        Items["SettingsIcon"].Instance.AbsolutePosition.Y + Items["SettingsIcon"].Instance.AbsoluteSize.Y + 5
                                     )
-                                    SettingsItems["Settings"].Instance.Size = UDim2New(0, 325, 0, 185)
                                 end)
                             else
                                 if RenderStepped then 
