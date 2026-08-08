@@ -2614,22 +2614,7 @@ local Library do
                     SettingsItems["Settings"]:Tween(nil, {Size = UDim2New(0, 325, 0, 0)})
                 end
         
-                            for Index, Value in Library.OpenFrames do 
-                                if Value ~= Settings then 
-                                    Value:SetOpen(false)
-                                end
-                            end
-        
-                            Library.OpenFrames[Settings] = Settings 
-                        else
-                            if Library.OpenFrames[Settings] then 
-                                Library.OpenFrames[Settings] = nil
-                            end
-
-                            SettingsItems["Settings"]:Tween(nil, {Size = UDim2New(0, 325, 0, 0)})
-                        end
-        
-                        local Descendants = SettingsItems["Settings"].Instance:GetDescendants()
+                local Descendants = SettingsItems["Settings"].Instance:GetDescendants()
                         TableInsert(Descendants, SettingsItems["Settings"].Instance)
         
                         local NewTween
