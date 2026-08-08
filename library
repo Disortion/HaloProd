@@ -1654,13 +1654,31 @@ local Library do
             end
 
             function Keybind:Set(Key)
-                if StringFind(tostring(Key), "Enum") then 
-                    Keybind.Key = tostring(Key)
+                local TargetEnum = nil
+                local TargetMode = nil
 
-                    local TextToDisplay = Key.Name == "Backspace" and "None" or Key.Name
+                if type(Key) == "table" and Key.Key then
+                    TargetEnum = Key.Key
+                    TargetMode = Key.Mode
+                else
+                    TargetEnum = Key
+                end
+
+                if typeof(TargetEnum) == "EnumItem" then
+                    Keybind.Key = tostring(TargetEnum)
+
+                    local TextToDisplay = TargetEnum.Name == "Backspace" and "None" or TargetEnum.Name
 
                     Keybind.Value = TextToDisplay
                     Items["KeyButton"].Instance.Text = TextToDisplay
+
+                    if TargetMode and TableFind({"Toggle", "Hold", "Always"}, TargetMode) then
+                        Keybind.Mode = TargetMode
+                        Keybind:SetMode(TargetMode)
+                    elseif not Keybind.Mode then
+                        Keybind.Mode = "Toggle"
+                        Keybind:SetMode("Toggle")
+                    end
 
                     Library.Flags[Keybind.Flag] = {
                         Mode = Keybind.Mode,
@@ -1671,37 +1689,9 @@ local Library do
                     if Data.Callback then 
                         Library:SafeCall(Data.Callback, Keybind.Toggled)
                     end
-                elseif type(Key) == "table" then
-                    local RealKey = Key.Key == "Backspace" and "None" or Key.Key
-                    Keybind.Key = tostring(Key.Key)
-
-                    if Key.Mode then
-                        Keybind.Mode = Key.Mode
-                        Keybind:SetMode(Key.Mode)
-                    else
-                        Keybind.Mode = "Toggle"
-                        Keybind:SetMode("Toggle")
-                    end
-
-                    local EnumVal = StringFind(RealKey, "Enum.KeyCode.") and Enum.KeyCode[StringGSub(RealKey, "Enum.KeyCode.", "")] or 
-                                   (StringFind(RealKey, "Enum.UserInputType.") and Enum.UserInputType[StringGSub(RealKey, "Enum.UserInputType.", "")] or nil)
-                    
-                    local TextToDisplay = "None"
-                    if EnumVal and EnumVal.Name then
-                        TextToDisplay = EnumVal.Name == "Backspace" and "None" or EnumVal.Name
-                    elseif type(RealKey) == "string" and not StringFind(RealKey, "Enum.") then
-                        TextToDisplay = RealKey
-                    end
-
-                    Keybind.Value = TextToDisplay
-                    Items["KeyButton"].Instance.Text = TextToDisplay
-
-                    if Data.Callback then 
-                        Library:SafeCall(Data.Callback, Keybind.Toggled)
-                    end
-                elseif TableFind({"Toggle", "Hold", "Always"}, Key) then
-                    Keybind.Mode = Key
-                    Keybind:SetMode(Key)
+                elseif type(TargetEnum) == "string" and TableFind({"Toggle", "Hold", "Always"}, TargetEnum) then
+                    Keybind.Mode = TargetEnum
+                    Keybind:SetMode(TargetEnum)
 
                     if Data.Callback then 
                         Library:SafeCall(Data.Callback, Keybind.Toggled)
