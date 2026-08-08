@@ -3706,8 +3706,9 @@ local Library do
                     BorderSizePixel = 0,
                     AutomaticSize = Enum.AutomaticSize.X,
                     TextSize = 14,
-                    BackgroundColor3 = FromRGB(255, 255, 255)
-                })  Items["Value"]:AddToTheme({TextColor3 = "Dark Text"})       
+                    BackgroundColor3 = FromRGB(255, 255, 255),
+                    ZIndex = 2
+                })  Items["Value"]:AddToTheme({TextColor3 = "Dark Text"}) 
                 
                 Items["RealSlider"]:OnHover(function()
                     Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
@@ -3742,7 +3743,7 @@ local Library do
                 Items["Value"].Instance.Text = StringFormat("%s%s", Slider.Value, Slider.Suffix)
 
                 if Slider.Value <= Slider.Min then
-                    Items["Dragger"].Instance.Position = UDim2New(1, 10, 0.5, 0)
+                    Items["Dragger"].Instance.Position = UDim2New(0, 0, 0.5, 0)
                 else
                     Items["Dragger"].Instance.Position = UDim2New(1, 0, 0.5, 0)
                 end
@@ -3964,8 +3965,9 @@ local Library do
                     BorderSizePixel = 0,
                     AutomaticSize = Enum.AutomaticSize.X,
                     TextSize = 14,
-                    BackgroundColor3 = FromRGB(255, 255, 255)
-                })  Items["Value"]:AddToTheme({TextColor3 = "Dark Text"})       
+                    BackgroundColor3 = FromRGB(255, 255, 255),
+                    ZIndex = 2
+                })  Items["Value"]:AddToTheme({TextColor3 = "Dark Text"})   
                 
                 Items["RealSlider"]:OnHover(function()
                     Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
