@@ -168,9 +168,9 @@ local Library do
         ["KeypadNine"]        = "Keypad9",
         ["KeypadPeriod"]      = "KeypadP",
         ["KeypadDivide"]      = "KeypadD",
-        ["KeypadMultiply"]    = "KeypadM",
-        ["KeypadMinus"]       = "KeypadM",
-        ["KeypadPlus"]        = "KeypadP",
+        ["KeypadMultiply"]    = "KeypadMult",
+        ["KeypadMinus"]       = "KeypadMinus",
+        ["KeypadPlus"]        = "KeypadPlus",
         ["KeypadEnter"]       = "KeypadE",
         ["KeypadEquals"]      = "KeypadE",
         ["Insert"]            = "Insert",
@@ -1689,12 +1689,45 @@ local Library do
                     if Data.Callback then 
                         Library:SafeCall(Data.Callback, Keybind.Toggled)
                     end
-                elseif type(TargetEnum) == "string" and TableFind({"Toggle", "Hold", "Always"}, TargetEnum) then
-                    Keybind.Mode = TargetEnum
-                    Keybind:SetMode(TargetEnum)
+                elseif type(TargetEnum) == "string" then
+                    -- SAFETY: Reject invalid enum names like "Pad0"
+                    local ok, enumItem = pcall(function()
+                        return Enum.KeyCode[TargetEnum]
+                    end)
+                    if ok and enumItem then
+                        -- It's a valid KeyCode name passed as string
+                        Keybind.Key = tostring(enumItem)
+                        local TextToDisplay = enumItem.Name == "Backspace" and "None" or enumItem.Name
+                        Keybind.Value = TextToDisplay
+                        Items["KeyButton"].Instance.Text = TextToDisplay
 
-                    if Data.Callback then 
-                        Library:SafeCall(Data.Callback, Keybind.Toggled)
+                        if TargetMode and TableFind({"Toggle", "Hold", "Always"}, TargetMode) then
+                            Keybind.Mode = TargetMode
+                            Keybind:SetMode(TargetMode)
+                        elseif not Keybind.Mode then
+                            Keybind.Mode = "Toggle"
+                            Keybind:SetMode("Toggle")
+                        end
+
+                        Library.Flags[Keybind.Flag] = {
+                            Mode = Keybind.Mode,
+                            Key = Keybind.Key,
+                            Toggled = Keybind.Toggled
+                        }
+
+                        if Data.Callback then 
+                            Library:SafeCall(Data.Callback, Keybind.Toggled)
+                        end
+                    elseif TableFind({"Toggle", "Hold", "Always"}, TargetEnum) then
+                        -- It's a mode string
+                        Keybind.Mode = TargetEnum
+                        Keybind:SetMode(TargetEnum)
+
+                        if Data.Callback then 
+                            Library:SafeCall(Data.Callback, Keybind.Toggled)
+                        end
+                    else
+                        warn("[Library] Ignored invalid keybind string: " .. tostring(TargetEnum))
                     end
                 end
 
@@ -1702,20 +1735,35 @@ local Library do
             end
 
             Items["KeyButton"]:Connect("MouseButton1Click", function()
+                if Keybind.Picking then return end
                 Keybind.Picking = true 
 
                 Items["KeyButton"].Instance.Text = "Press a key"
 
                 local InputBegan
+                local function finishPicking()
+                    Keybind.Picking = false
+                    if InputBegan then
+                        InputBegan:Disconnect()
+                        InputBegan = nil
+                    end
+                end
+
                 InputBegan = UserInputService.InputBegan:Connect(function(Input)
                     if Input.UserInputType == Enum.UserInputType.Keyboard then 
                         Keybind:Set(Input.KeyCode)
                     else
                         Keybind:Set(Input.UserInputType)
                     end
+                    finishPicking()
+                end)
 
-                    InputBegan:Disconnect()
-                    InputBegan = nil
+                -- Cancel if they click elsewhere or take too long
+                task.delay(5, function()
+                    if Keybind.Picking then
+                        Keybind:Set(Keybind.Key ~= "" and Keybind.Key or "None")
+                        finishPicking()
+                    end
                 end)
             end)
 
